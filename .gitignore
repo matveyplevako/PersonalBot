@@ -1,0 +1,5 @@
+.idea/
+logs/
+userdata.json
+token.txt
+__pycache__
