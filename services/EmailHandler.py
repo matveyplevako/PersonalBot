@@ -31,15 +31,20 @@ def get_data_about_user(user_id):
     return data[str(user_id)]
 
 
-def get_mail_object(email, password):
+def get_mail_object(email, password, status="UNSEEN"):
     with open(MAIL_SERVICES_PATH) as serv:
         json_data = json.load(serv)
     host = json_data[email.split("@")[-1]]
     mail = imaplib.IMAP4_SSL(host)
     mail.login(user=email, password=password)
     mail.select("inbox")
-    result, response_data = mail.uid('search', None, "UNSEEN")
+    result, response_data = mail.uid('search', None, status)
     uids = response_data[0]
+
+    # no unseen messages
+    if len(uids) == 0:
+        return mail, 0
+
     last_unseen_email_uid = uids.split()[-1]
     return mail, last_unseen_email_uid
 
@@ -52,7 +57,7 @@ def add_new_email(user_id, email, password):
     except:
         pass
     try:
-        mail, last_unseen_email_uid = get_mail_object(email, password)
+        mail, last_unseen_email_uid = get_mail_object(email, password, status="ALL")
     except:
         return False
 
@@ -69,13 +74,21 @@ def get_new_email(email, password, last_uid):
         sender = email_message["From"].split()[-1].replace("<", "").replace(">", "")
         subject = decode_header(email_message["Subject"])[0][0]
         if type(subject) == bytes:
-            subject = subject.decode("UTF-8")
-        content = "Empty"
+            try:
+                subject = subject.decode("UTF-8")
+            except:
+                pass
+            try:
+                subject = subject.decode("koi8-r")
+            except:
+                pass
+
+        content = "Cant read"
         for w in email_message.walk():
             if w.get_content_type() == "text/plain":
                 s = w.as_bytes()
                 if b"base64" in s:
-                    s = s.split(b"base64\n\n")[1]
+                    s = s.split(b"base64\n\n")[-1]
                     content = base64.b64decode(s).decode("UTF-8")
                 else:
                     content = w.as_string()

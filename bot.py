@@ -6,7 +6,6 @@ from telegram.ext import ConversationHandler, CallbackQueryHandler
 from telegram import ReplyKeyboardMarkup, KeyboardButton, ParseMode
 from telegram.ext import Filters
 from services import EmailHandler
-
 import logging
 
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s:%(lineno)d'
@@ -38,7 +37,8 @@ def add_new_user(bot, update):
 
 
 def periodic_pulling_mail(bot, job):
-    chat_id = job.context['chat_id']
+    chat_id = str(job.context['chat_id'])
+    assert chat_id in EmailHandler.get_users_data()
     user_emails = EmailHandler.get_data_about_user(chat_id)
     for email in user_emails:
         password = user_emails[email]["password"]
@@ -46,7 +46,7 @@ def periodic_pulling_mail(bot, job):
         response = EmailHandler.get_new_email(email, password, last_uid)
         if response:
             sender, subject, content = response
-            message = f"*To*: {email}\n*Sender*: {sender}\n*Subject*: {subject[:100]}"
+            message = f"`New email`\n*To*: {email}\n*Sender*: {sender}\n*Subject*: {subject[:100]}"
             bot.send_message(chat_id, message, parse_mode=ParseMode.MARKDOWN)
 
 
@@ -142,16 +142,7 @@ def main():
         fallbacks=[MessageHandler(Filters.text, settings)]
     )
 
-    deleting_email_receiver = ConversationHandler(
-        entry_points=[RegexHandler("Remove user data", delete_email)],
-        states={
-            1: []
-        },
-        fallbacks=[MessageHandler(Filters.text, settings)]
-    )
-
     dispatcher.add_handler(adding_new_email_receiver)
-    dispatcher.add_handler(deleting_email_receiver)
     updater.start_polling(poll_interval=0.5)
 
 

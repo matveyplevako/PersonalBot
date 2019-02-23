@@ -4,5 +4,6 @@
 1. ability to add multiple email services and receive mails
 
 ### Structure 
-bot handles main operations with bot
-class EmailHandler is used to configure email receiver and pull new messages
+1. bot handles main operations with bot.py
+2. class EmailHandler is used to configure email receiver and pull new messages
+3. mail_services.json contains currently supported mail services
