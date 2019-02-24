@@ -13,7 +13,7 @@ logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s:%(lineno)d'
                     level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-ADD_NAME, ADD_PASS, FINISH_ADDING = range(3)
+ADD_NAME, ADD_PASS, FINISH_ADDING, DELETE_EMAIL = range(4)
 
 
 def settings(bot: Bot, update):
@@ -36,6 +36,25 @@ def add_new_user(bot, update):
     return ADD_NAME
 
 
+def delete_user_email_select(bot, update):
+    logger.info("start process of deleting user")
+    keyboard = []
+    for email in EmailHandler.get_data_about_user(update.message.chat_id):
+        keyboard.append([KeyboardButton(email)])
+
+    reply_markup = ReplyKeyboardMarkup(keyboard,
+                                       one_time_keyboard=True,
+                                       resize_keyboard=True)
+    bot.send_message(update.message.chat_id, "Select email", reply_markup=reply_markup)
+    return DELETE_EMAIL
+
+
+def delete_user_email_delete(bot, update):
+    EmailHandler.remove_email_from_user(update.message.chat_id, update.message.text)
+    bot.send_message(update.message.chat_id, "deleted")
+    return ConversationHandler.END
+
+
 def periodic_pulling_mail(bot, job):
     chat_id = str(job.context['chat_id'])
     assert chat_id in EmailHandler.get_users_data()
@@ -46,6 +65,8 @@ def periodic_pulling_mail(bot, job):
         response = EmailHandler.get_new_email(email, password, last_uid)
         if response:
             sender, subject, link = response
+            sender = sender.replace("_", "\_")
+            email = email.replace("_", "\_")
             kb = [[InlineKeyboardButton("Open in web", url=link)]]
             message = f"`New email`\n*To*: {email}\n*Sender*: {sender}\n*Subject*: {subject[:100]}\n"
             bot.send_message(chat_id, message, parse_mode=ParseMode.MARKDOWN, reply_markup=InlineKeyboardMarkup(kb))
@@ -55,7 +76,7 @@ def start_email_configure(bot, update):
     logger.info("Configure new email: Step1")
     keyboard = [
         [KeyboardButton("Input new user data")],
-        [KeyboardButton("Remove user data")],
+        [KeyboardButton("Remove email receiver")],
         [KeyboardButton("Back to settings")]
     ]
     reply_markup = ReplyKeyboardMarkup(keyboard,
@@ -63,6 +84,11 @@ def start_email_configure(bot, update):
                                        resize_keyboard=True)
     bot.send_message(update.message.chat_id, "Select an option",
                      reply_markup=reply_markup)
+
+
+def cancel(bot, update):
+    settings(bot, update)
+    return ConversationHandler.END
 
 
 def start(bot, update):
@@ -73,11 +99,6 @@ def start(bot, update):
                                        one_time_keyboard=True,
                                        resize_keyboard=True)
     bot.send_message(update.message.chat_id, "Hello!", reply_markup=reply_markup)
-
-
-def delete_email(bot, update):
-    logger.info("start process of adding user")
-    bot.send_message(update.message.chat_id, "enter email")
 
 
 def add_user_email(bot, update, chat_data):
@@ -99,9 +120,8 @@ def add_user_password(bot, update, job_queue, chat_data):
         bot.send_message(update.message.chat_id, "Cant configure this email")
     else:
         bot.send_message(update.message.chat_id, "Now you will receive notifications when new email will be received")
+        job_queue.run_repeating(periodic_pulling_mail, 5, context={"chat_id": update.message.chat_id})
 
-    job = job_queue.run_repeating(periodic_pulling_mail, 5, context={"chat_id": update.message.chat_id})
-    chat_data['job'] = job
     settings(bot, update)
     return ConversationHandler.END
 
@@ -123,11 +143,10 @@ with open("token.txt") as token_file:
 
 def main():
     updater = Updater(token=TOKEN)
+    dispatcher = updater.dispatcher
 
     for chat_id in EmailHandler.get_users_data():
         updater.job_queue.run_repeating(periodic_pulling_mail, 5, context={"chat_id": chat_id})
-
-    dispatcher = updater.dispatcher
 
     dispatcher.add_handler(CommandHandler("start", start))
     dispatcher.add_handler(RegexHandler("Menu|Back to menu", menu))
@@ -140,8 +159,18 @@ def main():
             ADD_NAME: [MessageHandler(Filters.text, add_user_email, pass_chat_data=True)],
             ADD_PASS: [MessageHandler(Filters.text, add_user_password, pass_chat_data=True, pass_job_queue=True)],
         },
-        fallbacks=[MessageHandler(Filters.text, settings)]
+        fallbacks=[CommandHandler("cancel", cancel)]
     )
+
+    deleting_email_receiver = ConversationHandler(
+        entry_points=[RegexHandler("Remove email receiver", delete_user_email_select)],
+        states={
+            DELETE_EMAIL: [MessageHandler(Filters.text, delete_user_email_delete)],
+        },
+        fallbacks=[CommandHandler("cancel", cancel)]
+    )
+
+    dispatcher.add_handler(deleting_email_receiver)
     dispatcher.add_handler(adding_new_email_receiver)
     updater.start_polling(poll_interval=0.5)
 

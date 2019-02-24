@@ -1,7 +1,6 @@
 import json
 import imaplib
 import email as emaillib
-import base64
 from email.header import decode_header
 
 debug = False
@@ -21,14 +20,21 @@ def dump_new_data(key, new_entry):
         json.dump(data, file)
 
 
+def remove_email_from_user(user_uid, email):
+    user_uid = str(user_uid)
+    data = get_data_about_user(user_uid)
+    del data[email]
+    dump_new_data(user_uid, data)
+
+
 def get_users_data():
     with open(USER_DATA_PATH) as file:
         return json.load(file)
 
 
-def get_data_about_user(user_id):
+def get_data_about_user(user_uid):
     data = get_users_data()
-    return data[str(user_id)]
+    return data[str(user_uid)]
 
 
 def get_mail_object(email, password, status="UNSEEN"):
