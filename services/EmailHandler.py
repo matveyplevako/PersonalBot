@@ -34,7 +34,7 @@ def get_data_about_user(user_id):
 def get_mail_object(email, password, status="UNSEEN"):
     with open(MAIL_SERVICES_PATH) as serv:
         json_data = json.load(serv)
-    host = json_data[email.split("@")[-1]]
+    host = json_data[email.split("@")[-1]]["imap"]
     mail = imaplib.IMAP4_SSL(host)
     mail.login(user=email, password=password)
     mail.select("inbox")
@@ -82,18 +82,9 @@ def get_new_email(email, password, last_uid):
                 subject = subject.decode("koi8-r")
             except:
                 pass
-
-        content = "Cant read"
-        for w in email_message.walk():
-            if w.get_content_type() == "text/plain":
-                s = w.as_bytes()
-                if b"base64" in s:
-                    s = s.split(b"base64\n\n")[-1]
-                    content = base64.b64decode(s).decode("UTF-8")
-                else:
-                    content = w.as_string()
-
-        return sender, subject, content
+        with open(MAIL_SERVICES_PATH) as serv:
+            link = json.load(serv)[email.split("@")[-1]]["web mail"]
+        return sender, subject, link
 
 
 def get_known_domains():

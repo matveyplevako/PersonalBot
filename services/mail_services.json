@@ -1,1 +1,14 @@
-{"mail.ru": "imap.mail.ru", "rambler.ru": "imap.rambler.ru", "innopolis.university": "mail.innopolis.ru"}
+{
+  "mail.ru": {
+    "imap": "imap.mail.ru",
+    "web mail": "https://e.mail.ru"
+  },
+  "rambler.ru": {
+    "imap": "imap.rambler.ru",
+    "web mail": "https://mail.rambler.ru/"
+  },
+  "innopolis.university": {
+    "imap": "mail.innopolis.ru",
+    "web mail": "https://mail.innopolis.ru"
+  }
+}

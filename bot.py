@@ -3,7 +3,7 @@ from telegram.bot import Bot
 from telegram.ext import CommandHandler
 from telegram.ext import MessageHandler, RegexHandler
 from telegram.ext import ConversationHandler, CallbackQueryHandler
-from telegram import ReplyKeyboardMarkup, KeyboardButton, ParseMode
+from telegram import ReplyKeyboardMarkup, KeyboardButton, ParseMode, InlineKeyboardButton, InlineKeyboardMarkup
 from telegram.ext import Filters
 from services import EmailHandler
 import logging
@@ -45,9 +45,10 @@ def periodic_pulling_mail(bot, job):
         last_uid = user_emails[email]["last_uid"]
         response = EmailHandler.get_new_email(email, password, last_uid)
         if response:
-            sender, subject, content = response
-            message = f"`New email`\n*To*: {email}\n*Sender*: {sender}\n*Subject*: {subject[:100]}"
-            bot.send_message(chat_id, message, parse_mode=ParseMode.MARKDOWN)
+            sender, subject, link = response
+            kb = [[InlineKeyboardButton("Open in web", url=link)]]
+            message = f"`New email`\n*To*: {email}\n*Sender*: {sender}\n*Subject*: {subject[:100]}\n"
+            bot.send_message(chat_id, message, parse_mode=ParseMode.MARKDOWN, reply_markup=InlineKeyboardMarkup(kb))
 
 
 def start_email_configure(bot, update):
@@ -141,7 +142,6 @@ def main():
         },
         fallbacks=[MessageHandler(Filters.text, settings)]
     )
-
     dispatcher.add_handler(adding_new_email_receiver)
     updater.start_polling(poll_interval=0.5)
 
