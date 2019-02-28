@@ -1,5 +1,5 @@
 .idea/
-logs/
-userdata.json
+logs
+services/userdata.json
 token.txt
 __pycache__
