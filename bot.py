@@ -17,7 +17,7 @@ ADD_NAME, ADD_PASS, FINISH_ADDING, DELETE_EMAIL = range(4)
 
 
 def settings(bot: Bot, update):
-    logger.info("received settings command.")
+    logger.info("Settings command")
 
     keyboard = [
         [KeyboardButton("Configure email receiver")],
@@ -31,13 +31,13 @@ def settings(bot: Bot, update):
 
 
 def add_new_user(bot, update):
-    logger.info("start process of adding user")
+    logger.info("Start process of adding user")
     bot.send_message(update.message.chat_id, "enter email")
     return ADD_NAME
 
 
 def delete_user_email_select(bot, update):
-    logger.info("start process of deleting user")
+    logger.info("Start process of deleting user")
     keyboard = []
     for email in EmailHandler.get_data_about_user(update.message.chat_id):
         keyboard.append([KeyboardButton(email)])
@@ -50,8 +50,13 @@ def delete_user_email_select(bot, update):
 
 
 def delete_user_email_delete(bot, update):
-    EmailHandler.remove_email_from_user(update.message.chat_id, update.message.text)
+    logger.info("Handling email to delete")
+    if not EmailHandler.remove_email_from_user(update.message.chat_id, update.message.text):
+        logger.error("email not in userdata")
+        bot.send_message(update.message.chat_id, "This email is not currently tracking")
+        return cancel(bot, update)
     bot.send_message(update.message.chat_id, "deleted")
+    settings(bot, update)
     return ConversationHandler.END
 
 
@@ -62,18 +67,26 @@ def periodic_pulling_mail(bot, job):
     for email in user_emails:
         password = user_emails[email]["password"]
         last_uid = user_emails[email]["last_uid"]
-        response = EmailHandler.get_new_email(email, password, last_uid)
+        try:
+            response = EmailHandler.get_new_email(email, password, last_uid)
+        except Exception as e:
+            logger.error("Error while pulling new email")
+            logger.error(e)
+            continue
         if response:
             sender, subject, link = response
+            logger.info(f"New email to {email} from {sender}")
             sender = sender.replace("_", "\_")
             email = email.replace("_", "\_")
+            sender = sender.replace("-", "\-")
+            email = email.replace("-", "\-")
             kb = [[InlineKeyboardButton("Open in web", url=link)]]
             message = f"`New email`\n*To*: {email}\n*Sender*: {sender}\n*Subject*: {subject[:100]}\n"
             bot.send_message(chat_id, message, parse_mode=ParseMode.MARKDOWN, reply_markup=InlineKeyboardMarkup(kb))
 
 
 def start_email_configure(bot, update):
-    logger.info("Configure new email: Step1")
+    logger.info("Configure email receiver command")
     keyboard = [
         [KeyboardButton("Input new user data")],
         [KeyboardButton("Remove email receiver")],
@@ -87,11 +100,13 @@ def start_email_configure(bot, update):
 
 
 def cancel(bot, update):
+    logger.error("Cancel the process")
     settings(bot, update)
     return ConversationHandler.END
 
 
 def start(bot, update):
+    logger.info("Start command")
     keyboard = [
         [KeyboardButton("Menu")]
     ]
@@ -102,23 +117,26 @@ def start(bot, update):
 
 
 def add_user_email(bot, update, chat_data):
-    logger.info("Configure new email: Step1")
+    logger.info("Configure new email: handling email")
     chat_data['email'] = update.message.text
     domain = chat_data['email'].split("@")[-1]
     if domain not in EmailHandler.get_known_domains():
         bot.send_message(update.message.chat_id, "sorry, this domain is not currently supporting")
-        settings(bot, update)
-        return ConversationHandler.END
+        logger.error("Unknown domain")
+        return cancel(bot, update)
     bot.send_message(update.message.chat_id, "enter password")
     return ADD_PASS
 
 
 def add_user_password(bot, update, job_queue, chat_data):
-    logger.info("Configure new email: Step2")
+    logger.info("Configure new email: handling password")
     password = update.message.text
     if not EmailHandler.add_new_email(update.message.chat_id, chat_data['email'], password):
         bot.send_message(update.message.chat_id, "Cant configure this email")
+        logger.error("Password does not match or server does not respond")
+        return cancel(bot, update)
     else:
+        logger.info("Successful configured new email receiver")
         bot.send_message(update.message.chat_id, "Now you will receive notifications when new email will be received")
         job_queue.run_repeating(periodic_pulling_mail, 5, context={"chat_id": update.message.chat_id})
 
@@ -127,6 +145,7 @@ def add_user_password(bot, update, job_queue, chat_data):
 
 
 def menu(bot, update):
+    logger.info("Menu command")
     keyboard = [
         [KeyboardButton("Settings")]
     ]
@@ -172,6 +191,8 @@ def main():
 
     dispatcher.add_handler(deleting_email_receiver)
     dispatcher.add_handler(adding_new_email_receiver)
+    logger.info("Configured handlers")
+    logger.info("Starting")
     updater.start_polling(poll_interval=0.5)
 
 

@@ -23,8 +23,11 @@ def dump_new_data(key, new_entry):
 def remove_email_from_user(user_uid, email):
     user_uid = str(user_uid)
     data = get_data_about_user(user_uid)
+    if email not in data:
+        return False
     del data[email]
     dump_new_data(user_uid, data)
+    return True
 
 
 def get_users_data():
