@@ -49,7 +49,7 @@ def delete_user_email_select(bot, update):
         keyboard.append([KeyboardButton(user_data[1])])
 
     reply_markup = ReplyKeyboardMarkup(keyboard,
-                                       one_time_keyboard=False,
+                                       one_time_keyboard=True,
                                        resize_keyboard=True)
     if not keyboard:
         bot.send_message(update.message.chat_id, "You dont have registered email receivers")
@@ -99,7 +99,7 @@ def start_email_configure(bot, update):
         [KeyboardButton("Back to settings")]
     ]
     reply_markup = ReplyKeyboardMarkup(keyboard,
-                                       one_time_keyboard=False,
+                                       one_time_keyboard=True,
                                        resize_keyboard=True)
     bot.send_message(update.message.chat_id, "Select an option",
                      reply_markup=reply_markup)
