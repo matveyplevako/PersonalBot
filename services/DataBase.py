@@ -43,7 +43,3 @@ class DB:
     def get_all_rows(self):
         request = f"SELECT * FROM {self.table_name}"
         return [x for x in conn.execute(request)]
-#
-# mail_services.add_item(email="mail.ru", imap="imap.mail.ru", web_mail="https://e.mail.ru")
-# mail_services.add_item(email="rambler.ru", imap="imap.rambler.ru", web_mail="https://mail.rambler.ru/")
-# mail_services.add_item(email="innopolis.university", imap="mail.innopolis.ru", web_mail="https://mail.innopolis.ru")

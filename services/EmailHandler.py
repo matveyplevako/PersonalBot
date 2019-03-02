@@ -1,7 +1,5 @@
-import json
 import imaplib
 import email as emaillib
-import os
 from email.header import decode_header
 from services.DataBase import DB
 
