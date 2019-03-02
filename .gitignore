@@ -1,5 +1,4 @@
 .idea/
 logs
-services/userdata.json
-token.txt
 __pycache__
+.DS_Store
