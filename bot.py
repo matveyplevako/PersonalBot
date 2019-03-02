@@ -28,7 +28,7 @@ def settings(bot: Bot, update):
         [KeyboardButton("Back to menu")]
     ]
     reply_markup = ReplyKeyboardMarkup(keyboard,
-                                       one_time_keyboard=True,
+                                       one_time_keyboard=False,
                                        resize_keyboard=True)
 
     bot.send_message(update.message.chat_id, "Select an option", reply_markup=reply_markup)
@@ -49,7 +49,7 @@ def delete_user_email_select(bot, update):
         keyboard.append([KeyboardButton(user_data[1])])
 
     reply_markup = ReplyKeyboardMarkup(keyboard,
-                                       one_time_keyboard=True,
+                                       one_time_keyboard=False,
                                        resize_keyboard=True)
     if not keyboard:
         bot.send_message(update.message.chat_id, "You dont have registered email receivers")
@@ -99,7 +99,7 @@ def start_email_configure(bot, update):
         [KeyboardButton("Back to settings")]
     ]
     reply_markup = ReplyKeyboardMarkup(keyboard,
-                                       one_time_keyboard=True,
+                                       one_time_keyboard=False,
                                        resize_keyboard=True)
     bot.send_message(update.message.chat_id, "Select an option",
                      reply_markup=reply_markup)
@@ -117,7 +117,7 @@ def start(bot, update):
         [KeyboardButton("Menu")]
     ]
     reply_markup = ReplyKeyboardMarkup(keyboard,
-                                       one_time_keyboard=True,
+                                       one_time_keyboard=False,
                                        resize_keyboard=True)
     bot.send_message(update.message.chat_id, "Hello!", reply_markup=reply_markup)
 
@@ -158,7 +158,7 @@ def menu(bot, update):
         [KeyboardButton("Settings")]
     ]
     reply_markup = ReplyKeyboardMarkup(keyboard,
-                                       one_time_keyboard=True,
+                                       one_time_keyboard=False,
                                        resize_keyboard=True)
 
     bot.send_message(update.message.chat_id, "Select an option", reply_markup=reply_markup)
