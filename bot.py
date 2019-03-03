@@ -146,7 +146,7 @@ def add_user_password(bot, update, job_queue, chat_data):
     else:
         logger.info("Successful configured new email receiver")
         bot.send_message(update.message.chat_id, "Now you will receive notifications when new email will be received")
-        job_queue.run_repeating(periodic_pulling_mail, 30, context={"chat_id": update.message.chat_id})
+        job_queue.run_repeating(periodic_pulling_mail, 5, context={"chat_id": update.message.chat_id})
 
     settings(bot, update)
     return ConversationHandler.END
@@ -172,7 +172,7 @@ def main():
     dispatcher = updater.dispatcher
 
     for user_data in EmailHandler.get_users_data():
-        updater.job_queue.run_repeating(periodic_pulling_mail, 30, context={"chat_id": user_data[0]})
+        updater.job_queue.run_repeating(periodic_pulling_mail, 5, context={"chat_id": user_data[0]})
 
     dispatcher.add_handler(CommandHandler("start", start))
     dispatcher.add_handler(RegexHandler("Menu|Back to menu", menu))
