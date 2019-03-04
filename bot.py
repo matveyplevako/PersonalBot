@@ -126,12 +126,12 @@ def add_user_email(bot, update, chat_data):
     logger.info("Configure new email: handling email")
     chat_data['email'] = update.message.text
     domain = chat_data['email'].split("@")[-1]
-    email_data = EmailHandler.get_domain_data(domain)[0]
+    email_data = EmailHandler.get_domain_data(domain)
     if not email_data:
         bot.send_message(update.message.chat_id, "sorry, this domain is not currently supporting")
         logger.error("Unknown domain")
         return cancel(bot, update)
-    chat_data['imap'] = email_data[1]
+    chat_data['imap'] = email_data[0][1]
     bot.send_message(update.message.chat_id, "enter password")
     return ADD_PASS
 
