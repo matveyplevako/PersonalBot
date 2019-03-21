@@ -1,23 +1,10 @@
 from telegram.ext import ConversationHandler
 from telegram import ReplyKeyboardMarkup, KeyboardButton, ParseMode, InlineKeyboardButton, InlineKeyboardMarkup
 from services.logger import logger
-import services.email.email_utils as utils
+from services.email import email_utils
+from services.initial.functions import settings
 
 ADD_NAME, ADD_PASS, FINISH_ADDING, DELETE_EMAIL = range(4)
-
-
-def settings(bot, update):
-    logger.info("Settings command")
-
-    keyboard = [
-        [KeyboardButton("Configure email receiver")],
-        [KeyboardButton("Back to menu")]
-    ]
-    reply_markup = ReplyKeyboardMarkup(keyboard,
-                                       one_time_keyboard=False,
-                                       resize_keyboard=True)
-
-    bot.send_message(update.message.chat_id, "Select an option", reply_markup=reply_markup)
 
 
 def cancel(bot, update):
@@ -28,14 +15,14 @@ def cancel(bot, update):
 
 def add_new_user(bot, update):
     logger.info("Start process of adding user")
-    bot.send_message(update.message.chat_id, "enter email")
+    bot.send_message(update.message.chat_id, "enter email\nor /cancel")
     return ADD_NAME
 
 
 def delete_user_email_select(bot, update):
     logger.info("Start process of deleting user")
     keyboard = []
-    data = utils.get_data_about_user(update.message.chat_id)
+    data = email_utils.get_data_about_user(update.message.chat_id)
 
     for user_data in data:
         keyboard.append([KeyboardButton(user_data[1])])
@@ -53,7 +40,7 @@ def delete_user_email_select(bot, update):
 
 def delete_user_email_delete(bot, update):
     logger.info("Handling email to delete")
-    utils.remove_email_from_user(update.message.chat_id, update.message.text)
+    email_utils.remove_email_from_user(update.message.chat_id, update.message.text)
     bot.send_message(update.message.chat_id, "deleted")
     settings(bot, update)
     return ConversationHandler.END
@@ -61,13 +48,13 @@ def delete_user_email_delete(bot, update):
 
 def periodic_pulling_mail(bot, job):
     chat_id = str(job.context['chat_id'])
-    user_data = utils.get_data_about_user(chat_id)
+    user_data = email_utils.get_data_about_user(chat_id)
     for data in user_data:
         email = data[1]
         password = data[2]
         last_uid = data[3]
         try:
-            response = utils.get_new_email(email, password, last_uid)
+            response = email_utils.get_new_email(email, password, last_uid)
         except Exception as e:
             logger.error("Error while pulling new email")
             logger.error(e)
@@ -101,7 +88,7 @@ def add_user_email(bot, update, chat_data):
     logger.info("Configure new email: handling email")
     chat_data['email'] = update.message.text
     domain = chat_data['email'].split("@")[-1]
-    email_data = utils.get_domain_data(domain)
+    email_data = email_utils.get_domain_data(domain)
     if not email_data:
         bot.send_message(update.message.chat_id, "sorry, this domain is not currently supporting")
         logger.error("Unknown domain")
@@ -114,7 +101,7 @@ def add_user_email(bot, update, chat_data):
 def add_user_password(bot, update, job_queue, chat_data):
     logger.info("Configure new email: handling password")
     password = update.message.text
-    if not utils.add_new_email(update.message.chat_id, chat_data['email'], password, chat_data['imap']):
+    if not email_utils.add_new_email(update.message.chat_id, chat_data['email'], password, chat_data['imap']):
         bot.send_message(update.message.chat_id, "Password does not match or server does not respond")
         logger.error("Password does not match or server does not respond")
         return cancel(bot, update)

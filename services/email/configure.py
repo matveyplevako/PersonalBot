@@ -5,7 +5,7 @@ from telegram.ext import RegexHandler, MessageHandler, Filters, CommandHandler
 def setup(updater):
     dispatcher = updater.dispatcher
 
-    for user_data in utils.get_users_data():
+    for user_data in email_utils.get_users_data():
         updater.job_queue.run_repeating(periodic_pulling_mail, 5, context={"chat_id": user_data[0]})
 
     dispatcher.add_handler(RegexHandler("Configure email receiver", start_email_configure))

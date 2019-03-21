@@ -6,6 +6,7 @@ from services.logger import logger
 def menu(bot, update):
     logger.info("Menu command")
     keyboard = [
+        [KeyboardButton("Sport complex attendance")],
         [KeyboardButton("Settings")]
     ]
     reply_markup = ReplyKeyboardMarkup(keyboard,
