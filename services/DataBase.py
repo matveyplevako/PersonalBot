@@ -35,11 +35,18 @@ class DB:
         request = f"DELETE FROM {self.table_name} WHERE {columns}"
         conn.execute(request)
 
-    def get_items(self, **kwargs):
-        columns = " AND ".join([arg + " = " + f"'{arg_value}'" for (arg, arg_value) in kwargs.items()])
+    def get_items(self, *args, **kwargs):
+        sign = " = "
+        if "sign" in kwargs:
+            sign = kwargs[sign]
+
+        columns = " AND ".join([arg + sign + f"'{arg_value}'" for (arg, arg_value) in kwargs.items()])
         request = f"SELECT * FROM {self.table_name} WHERE {columns}"
-        return [x for x in conn.execute(request)]
+        return self.excecute(request)
 
     def get_all_rows(self):
         request = f"SELECT * FROM {self.table_name}"
+        return self.excecute(request)
+
+    def excecute(self, request):
         return [x for x in conn.execute(request)]
