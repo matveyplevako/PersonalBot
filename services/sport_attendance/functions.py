@@ -76,13 +76,14 @@ def get_attendance_for_period(bot, update):
     try:
         start, finish = update.message.text.split(":")
         now = datetime.now()
-        if start.split(":") == 3 and finish.split("-") == 3:
-            start = str(datetime.strptime(start, '%y-%m-%d'))
-            finish = str(datetime.strptime(finish, '%y-%m-%d'))
+        if len(start.split("-")) == 3 and len(finish.split("-")) == 3:
+            start = str(datetime.strptime(start, '%Y-%m-%d'))
+            finish = str(datetime.strptime(finish, '%Y-%m-%d'))
         else:
             start = str(datetime.strptime(start, '%m-%d').replace(year=now.year))
             finish = str(datetime.strptime(finish, '%m-%d').replace(year=now.year))
-    except:
+    except Exception as e:
+        logger.error(e)
         bot.send_message(update.message.chat_id, "enter valid date and time and try again")
         return cancel(bot, update)
 
