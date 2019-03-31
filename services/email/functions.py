@@ -64,6 +64,8 @@ def periodic_pulling_mail(bot, job):
             sender, subject, link = response
             logger.info(f"New email to {email} from {sender}")
             sender = sender.replace("_", "\_")
+            subject = subject.replace("_", "\_")
+            subject = subject.replace("*", "\*")
             email = email.replace("_", "\_")
             kb = [[InlineKeyboardButton("Open in web", url=link)]]
             message = f"`New email`\n*To*: {email}\n*Sender*: {sender}\n*Subject*: {subject[:100]}\n"
