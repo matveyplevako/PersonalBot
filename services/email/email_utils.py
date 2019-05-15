@@ -2,6 +2,12 @@ import imaplib
 import email as emaillib
 from email.header import decode_header
 from services.DataBase import DB
+from imgurpython import ImgurClient
+from PIL import Image
+import imgkit
+import os
+import pickle
+import traceback
 
 user_data = DB("USER_DATA", user_id="TEXT", email="TEXT", password="TEXT", last_uid="TEXT")
 mail_services = DB("MAIL_SERVICES", email="TEXT", imap="TEXT", web_mail="TEXT")
@@ -24,7 +30,7 @@ def get_mail_object(email, password, imap, status="UNSEEN"):
 
     # no unseen messages
     if len(uids) == 0:
-        return mail, 0
+        return mail, -1
 
     last_unseen_email_uid = uids.split()[-1]
     return mail, last_unseen_email_uid
@@ -34,15 +40,22 @@ def add_new_email(user_id, email, password, imap):
     user_id = str(user_id)
     try:
         mail, last_unseen_email_uid = get_mail_object(email, password, imap, status="ALL")
+        user_data.add_item(user_id=user_id, email=email, password=password,
+                           last_uid=last_unseen_email_uid.decode('utf-8'))
+        mail.logout()
+        return True
     except Exception as e:
         print(e)
         return False
 
-    user_data.add_item(user_id=user_id, email=email, password=password, last_uid=last_unseen_email_uid.decode('utf-8'))
-    return True
 
+def get_new_email(email, password, last_uid, chat_id):
+    def decode_message(x):
+        try:
+            return len(x.get_payload(decode=True).decode())
+        except:
+            return -1
 
-def get_new_email(email, password, last_uid):
     domain = email.split("@")[-1]
     imap, link = mail_services.get_items(email=domain)[0][1:]
     mail, last_unseen_email_uid = get_mail_object(email, password, imap)
@@ -52,6 +65,29 @@ def get_new_email(email, password, last_uid):
         email_message = emaillib.message_from_bytes(raw_email)
         sender = email_message["From"].split()[-1].replace("<", "").replace(">", "")
         subject = decode_header(email_message["Subject"])[0][0]
+        if email_message.is_multipart():
+            while len(email_message.get_payload()) == 1:
+                email_message = email_message.get_payload()[0]
+            content = max(email_message.get_payload(), key=lambda x: decode_message(x))
+            content = content.get_payload(decode=True).decode()
+        else:
+            content = email_message.get_payload(decode=True).decode()
+
+        content = '<head><meta http-equiv="Content-Type" content="text/\r\nhtml; charset=utf-8" />' + content
+
+        try:
+            filename = f"{chat_id}.png"
+            imgkit.from_string(content, filename)
+            while os.path.getsize(filename) / 1e6 > 10:
+                compressMe(filename)
+            link = upload_image_from_file(filename)
+            os.remove(filename)
+        except:
+            with open('mail.pickle', 'wb') as f:
+                pickle.dump(email_message, f)
+            traceback.print_exc()
+            link = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRsYzzI3RBt_e-TC48yfSMNH-ZYpU-xos5C_8F96R9INAJLy_eW"
+
         if type(subject) == bytes:
             try:
                 subject = subject.decode("UTF-8")
@@ -60,8 +96,20 @@ def get_new_email(email, password, last_uid):
                     subject = subject.decode("koi8-r")
                 except:
                     subject = ""
-
+        mail.logout()
         return sender, subject, link
+    else:
+        mail.logout()
+        pass
+
+
+def upload_image_from_file(filename):
+    client_id = os.environ.get("IMGUR_API_ID")
+    client_secret = os.environ.get("IMGUR_API_SECRET")
+    client = ImgurClient(client_id, client_secret)
+    response = client.upload_from_path(filename, anon=True)
+    link = response['link']
+    return link
 
 
 def get_domain_data(domain):
@@ -70,3 +118,9 @@ def get_domain_data(domain):
 
 def get_users_data():
     return user_data.get_all_rows()
+
+
+def compressMe(file):
+    filename = os.path.join(os.getcwd(), file)
+    picture = Image.open(filename).convert("RGB")
+    picture.save(file, "JPEG", optimize=True, quality=90)

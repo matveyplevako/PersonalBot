@@ -1,8 +1,9 @@
 from telegram.ext import ConversationHandler
-from telegram import ReplyKeyboardMarkup, KeyboardButton, ParseMode, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import ReplyKeyboardMarkup, KeyboardButton, ParseMode
 from services.logger import logger
 from services.email import email_utils
 from services.initial.functions import settings
+import traceback
 
 ADD_NAME, ADD_PASS, FINISH_ADDING, DELETE_EMAIL = range(4)
 
@@ -54,22 +55,22 @@ def periodic_pulling_mail(bot, job):
         password = data[2]
         last_uid = data[3]
         try:
-            response = email_utils.get_new_email(email, password, last_uid)
+            response = email_utils.get_new_email(email, password, last_uid, chat_id)
         except Exception as e:
             logger.error("Error while pulling new email")
-            logger.error(e)
+            logger.error(traceback.print_exc())
             logger.error(email)
             continue
         if response:
-            sender, subject, link = response
+            sender, subject, image = response
             logger.info(f"New email to {email} from {sender}")
             sender = sender.replace("_", "\_")
             subject = subject.replace("_", "\_")
             subject = subject.replace("*", "\*")
             email = email.replace("_", "\_")
-            kb = [[InlineKeyboardButton("Open in web", url=link)]]
-            message = f"`New email`\n*To*: {email}\n*Sender*: {sender}\n*Subject*: {subject[:100]}\n"
-            bot.send_message(chat_id, message, parse_mode=ParseMode.MARKDOWN, reply_markup=InlineKeyboardMarkup(kb))
+            message = f"[​​​​​​​​​​​]({image}) `New email`\n*To*: {email}\n*Sender*: {sender}\n*Subject*: {subject[:100]}\n"
+
+            bot.send_message(chat_id, message, parse_mode=ParseMode.MARKDOWN)
 
 
 def start_email_configure(bot, update):
@@ -92,7 +93,8 @@ def add_user_email(bot, update, chat_data):
     domain = chat_data['email'].split("@")[-1]
     email_data = email_utils.get_domain_data(domain)
     if not email_data:
-        bot.send_message(update.message.chat_id, "sorry, this domain is not currently supporting")
+        bot.send_message(update.message.chat_id,
+                         "sorry, this domain is not currently supporting, write to @matveyplevako")
         logger.error("Unknown domain")
         return cancel(bot, update)
     chat_data['imap'] = email_data[0][1]
