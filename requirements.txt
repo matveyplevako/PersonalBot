@@ -2,4 +2,5 @@ imgurpython
 imgkit
 sqlalchemy
 python-telegram-bot
+PIL
 psycopg2
