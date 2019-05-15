@@ -4,3 +4,4 @@ sqlalchemy
 python-telegram-bot
 Pillow
 psycopg2
+wkhtmltopdf-pack
