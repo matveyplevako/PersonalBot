@@ -1,5 +1,5 @@
 from services.email.functions import *
-from telegram.ext import RegexHandler, MessageHandler, Filters, CommandHandler
+from telegram.ext import RegexHandler, MessageHandler, Filters, CommandHandler, CallbackQueryHandler
 
 
 def setup(updater):
