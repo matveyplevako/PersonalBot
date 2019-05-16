@@ -63,7 +63,10 @@ def get_new_email(email, password, last_uid, chat_id):
         raw_email = data[0][1]
         email_message = emaillib.message_from_bytes(raw_email)
         sender = email_message["From"].split()[-1].replace("<", "").replace(">", "")
-        subject = decode_header(email_message["Subject"])[0][0]
+        if email_message["Subject"] != None:
+            subject = decode_header(email_message["Subject"])[0][0]
+        else:
+            subject = "Empty subject"
         if email_message.is_multipart():
             while len(email_message.get_payload()) == 1:
                 email_message = email_message.get_payload()[0]
