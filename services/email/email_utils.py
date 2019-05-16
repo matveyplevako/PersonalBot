@@ -4,7 +4,6 @@ from email.header import decode_header
 from services.DataBase import DB
 from imgurpython import ImgurClient
 from PIL import Image
-import imgkit
 import os
 import pickle
 import traceback
@@ -77,9 +76,10 @@ def get_new_email(email, password, last_uid, chat_id):
 
         try:
             filename = f"{chat_id}.png"
-            imgkit.from_string(content, filename)
-            while os.path.getsize(filename) / 1e6 > 10:
-                compressMe(filename)
+            save_as_html(content)
+            os.system(f"{os.environ['WKHTMLTOIMAGE_BIN']} temp.html {filename}")
+            os.remove("temp.html")
+            compressMe(filename)
             link = upload_image_from_file(filename)
             os.remove(filename)
         except:
@@ -103,6 +103,11 @@ def get_new_email(email, password, last_uid, chat_id):
         pass
 
 
+def save_as_html(source):
+    with open("temp.html", "w") as tmp:
+        tmp.write(source)
+
+
 def upload_image_from_file(filename):
     client_id = os.environ.get("IMGUR_API_ID")
     client_secret = os.environ.get("IMGUR_API_SECRET")
@@ -120,7 +125,8 @@ def get_users_data():
     return user_data.get_all_rows()
 
 
-def compressMe(file):
-    filename = os.path.join(os.getcwd(), file)
-    picture = Image.open(filename).convert("RGB")
-    picture.save(file, "JPEG", optimize=True, quality=90)
+def compressMe(filename):
+    while os.path.getsize(filename) / 1e6 > 10:
+        filename = os.path.join(os.getcwd(), filename)
+        picture = Image.open(filename).convert("RGB")
+        picture.save(filename, "JPEG", optimize=True, quality=90)

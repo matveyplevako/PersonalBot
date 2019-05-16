@@ -1,8 +1,5 @@
 imgurpython
-imgkit
 sqlalchemy
 python-telegram-bot
 Pillow
 psycopg2
-python-pdf
-wkhtmltopdf-pack-ng
