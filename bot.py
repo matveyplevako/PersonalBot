@@ -16,7 +16,7 @@ def main():
 
     logger.info("Configured handlers")
     logger.info("Starting")
-    updater.start_polling(poll_interval=0.5)
+    updater.start_polling(poll_interval=1)
 
 
 if __name__ == '__main__':

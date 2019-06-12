@@ -63,21 +63,22 @@ def get_new_email(email, password, last_uid, chat_id):
         raw_email = data[0][1]
         email_message = emaillib.message_from_bytes(raw_email)
         sender = email_message["From"].split()[-1].replace("<", "").replace(">", "")
-        if email_message["Subject"] != None:
+        if email_message["Subject"] is not None:
             subject = decode_header(email_message["Subject"])[0][0]
         else:
             subject = "Empty subject"
-        if email_message.is_multipart():
-            while len(email_message.get_payload()) == 1:
-                email_message = email_message.get_payload()[0]
-            content = max(email_message.get_payload(), key=lambda x: decode_message(x))
-            content = content.get_payload(decode=True).decode()
-        else:
-            content = email_message.get_payload(decode=True).decode()
-
-        content = '<head><meta http-equiv="Content-Type" content="text/\r\nhtml; charset=utf-8" />' + content
 
         try:
+            if email_message.is_multipart():
+                while len(email_message.get_payload()) == 1:
+                    email_message = email_message.get_payload()[0]
+                content = max(email_message.get_payload(), key=lambda x: decode_message(x))
+                content = content.get_payload(decode=True).decode()
+            else:
+                content = email_message.get_payload(decode=True).decode()
+
+            content = '<head><meta http-equiv="Content-Type" content="text/\r\nhtml; charset=utf-8" />' + content
+
             filename = f"{chat_id}.png"
             save_as_html(content)
             os.system(f"{os.environ['WKHTMLTOIMAGE_BIN']} temp.html {filename}")
@@ -89,7 +90,7 @@ def get_new_email(email, password, last_uid, chat_id):
             with open('mail.pickle', 'wb') as f:
                 pickle.dump(email_message, f)
             traceback.print_exc()
-            link = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcRsYzzI3RBt_e-TC48yfSMNH-ZYpU-xos5C_8F96R9INAJLy_eW"
+            link = None
 
         if type(subject) == bytes:
             try:

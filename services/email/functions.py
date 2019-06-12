@@ -68,7 +68,10 @@ def periodic_pulling_mail(bot, job):
             subject = subject.replace("_", "\_")
             subject = subject.replace("*", "\*")
             email = email.replace("_", "\_")
-            message = f"[​​​​​​​​​​​]({image}) `New email`\n*To*: {email}\n*Sender*: {sender}\n*Subject*: {subject[:100]}\n"
+            if image is None:
+                message = f"`New email`\n*To*: {email}\n*Sender*: {sender}\n*Subject*: {subject[:100]}\n"
+            else:
+                message = f"[​​​​​​​​​​​]({image}) `New email`\n*To*: {email}\n*Sender*: {sender}\n*Subject*: {subject[:100]}\n"
 
             bot.send_message(chat_id, message, parse_mode=ParseMode.MARKDOWN)
 
@@ -112,7 +115,7 @@ def add_user_password(bot, update, job_queue, chat_data):
     else:
         logger.info("Successful configured new email receiver")
         bot.send_message(update.message.chat_id, "Now you will receive notifications when new email will be received")
-        job_queue.run_repeating(periodic_pulling_mail, 5, context={"chat_id": update.message.chat_id})
+        job_queue.run_repeating(periodic_pulling_mail, 10, context={"chat_id": update.message.chat_id})
 
     settings(bot, update)
     return ConversationHandler.END
