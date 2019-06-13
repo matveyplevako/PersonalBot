@@ -69,15 +69,24 @@ def get_new_email(email, password, last_uid, chat_id):
             subject = "Empty subject"
 
         try:
-            if email_message.is_multipart():
-                while len(email_message.get_payload()) == 1:
-                    email_message = email_message.get_payload()[0]
-                content = max(email_message.get_payload(), key=lambda x: decode_message(x))
-                content = content.get_payload(decode=True).decode()
-            else:
-                content = email_message.get_payload(decode=True).decode()
+            content = None
+            charset = None
 
-            content = '<head><meta http-equiv="Content-Type" content="text/\r\nhtml; charset=utf-8" />' + content
+            if email_message.is_multipart():
+                for part in email_message.walk():
+                    ctype = part.get_content_type()
+                    cdispo = str(part.get('Content-Disposition'))
+
+                    if ctype == 'text/html' and 'attachment' not in cdispo:
+                        content = part.get_payload(decode=True)
+                        charset = part.get_charsets()[0]
+                        break
+            else:
+                content = email_message.get_payload(decode=True)
+                charset = email_message.get_charsets()[0]
+
+            prefix = f'<head><meta http-equiv="Content-Type" content="text/\r\nhtml; charset={charset}" />'
+            content = prefix + content.decode(charset)
 
             filename = f"{chat_id}.png"
             save_as_html(content)
