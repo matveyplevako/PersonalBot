@@ -49,11 +49,6 @@ def add_new_email(user_id, email, password, imap):
 
 
 def get_new_email(email, password, last_uid, chat_id):
-    def decode_message(x):
-        try:
-            return len(x.get_payload(decode=True).decode())
-        except:
-            return -1
 
     domain = email.split("@")[-1]
     imap, link = mail_services.get_items(email=domain)[0][1:]
@@ -67,7 +62,6 @@ def get_new_email(email, password, last_uid, chat_id):
             subject = decode_header(email_message["Subject"])[0][0]
         else:
             subject = "Empty subject"
-
         try:
             content = None
             charset = None
@@ -84,6 +78,9 @@ def get_new_email(email, password, last_uid, chat_id):
             else:
                 content = email_message.get_payload(decode=True)
                 charset = email_message.get_charsets()[0]
+
+            if charset is None:
+                charset = 'utf-8'
 
             prefix = f'<head><meta http-equiv="Content-Type" content="text/\r\nhtml; charset={charset}" />'
             content = prefix + content.decode(charset)
@@ -142,4 +139,4 @@ def compressMe(filename):
     while os.path.getsize(filename) / 1e6 > 10:
         filename = os.path.join(os.getcwd(), filename)
         picture = Image.open(filename).convert("RGB")
-        picture.save(filename, "JPEG", optimize=True, quality=90)
+        picture.save(filename, "JPEG", optimize=True)
