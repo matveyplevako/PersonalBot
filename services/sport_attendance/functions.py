@@ -68,7 +68,7 @@ def add_finish_time(bot, update, chat_data):
 
 
 def request_period_from_user(bot, update):
-    bot.send_message(update.message.chat_id, "Enter period\nOptional[Y-]M-D:Optional[Y-]M-D")
+    bot.send_message(update.message.chat_id, "Enter period\nOptional[Y-]M-D:Optional[Y-]M-D\nor /cancel")
     return GET_FOR_PERIOD
 
 

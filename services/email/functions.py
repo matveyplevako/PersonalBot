@@ -35,7 +35,7 @@ def delete_user_email_select(bot, update):
         bot.send_message(update.message.chat_id, "You dont have registered email receivers")
         return cancel(bot, update)
 
-    bot.send_message(update.message.chat_id, "Select email", reply_markup=reply_markup)
+    bot.send_message(update.message.chat_id, "Select email\nor /cancel", reply_markup=reply_markup)
     return DELETE_EMAIL
 
 
