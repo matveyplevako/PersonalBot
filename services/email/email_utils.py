@@ -5,6 +5,7 @@ from services.DataBase import DB
 from imgurpython import ImgurClient
 from PIL import Image
 import os
+import re
 import pickle
 import traceback
 
@@ -49,7 +50,6 @@ def add_new_email(user_id, email, password, imap):
 
 
 def get_new_email(email, password, last_uid, chat_id):
-
     domain = email.split("@")[-1]
     imap, link = mail_services.get_items(email=domain)[0][1:]
     mail, last_unseen_email_uid = get_mail_object(email, password, imap)
@@ -58,6 +58,7 @@ def get_new_email(email, password, last_uid, chat_id):
         raw_email = data[0][1]
         email_message = emaillib.message_from_bytes(raw_email)
         sender = email_message["From"].split()[-1].replace("<", "").replace(">", "")
+        charset = "utf-8"
         if email_message["Subject"] is not None:
             subject = decode_header(email_message["Subject"])[0][0]
         else:
@@ -82,8 +83,11 @@ def get_new_email(email, password, last_uid, chat_id):
             if charset is None:
                 charset = 'utf-8'
 
-            prefix = f'<head><meta http-equiv="Content-Type" content="text/\r\nhtml; charset={charset}" />'
-            content = prefix + content.decode(charset)
+            content = content.decode(charset)
+            if len(re.findall("<meta.+?charset=.+?>", content)) > 0:
+                content = re.sub(r"(<meta.+?charset=).+?([> ])", r'\1utf-8"\2', content)
+            else:
+                content = f'<head><meta http-equiv="Content-Type" content="text/\r\nhtml; charset=utf-8"/>' + content
 
             filename = f"{chat_id}.png"
             save_as_html(content)
@@ -100,12 +104,9 @@ def get_new_email(email, password, last_uid, chat_id):
 
         if type(subject) == bytes:
             try:
-                subject = subject.decode("UTF-8")
+                subject = subject.decode(charset)
             except:
-                try:
-                    subject = subject.decode("koi8-r")
-                except:
-                    subject = ""
+                subject = ""
         mail.logout()
         return sender, subject, link
     else:
