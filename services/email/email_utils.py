@@ -85,7 +85,7 @@ def get_new_email(email, password, last_uid, chat_id):
 
             content = content.decode(charset)
             if len(re.findall("<meta.+?charset=.+?>", content)) > 0:
-                content = re.sub(r"(<meta.+?charset=).+?([> ])", r'\1utf-8"\2', content)
+                content = re.sub(r"(<meta.+?charset=\"?).+?([\"> ])", r'\1utf-8\2', content)
             else:
                 content = f'<head><meta http-equiv="Content-Type" content="text/\r\nhtml; charset=utf-8"/>' + content
 
