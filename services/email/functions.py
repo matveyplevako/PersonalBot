@@ -56,7 +56,11 @@ def periodic_pulling_mail(bot, job):
         last_uid = data[3]
         try:
             response = email_utils.get_new_email(email, password, last_uid, chat_id)
+        except EOFError:
+            logger.error("EOFError")
+            continue
         except Exception as e:
+            print(e)
             logger.error("Error while pulling new email")
             logger.error(traceback.print_exc())
             logger.error(email)

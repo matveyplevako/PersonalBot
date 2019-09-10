@@ -23,7 +23,10 @@ def get_data_about_user(user_id):
 
 def get_mail_object(email, password, imap, status="UNSEEN"):
     mail = imaplib.IMAP4_SSL(imap)
-    mail.login(user=email, password=password)
+    try:
+        mail.login(user=email, password=password)
+    except:
+        raise EOFError
     mail.select("inbox")
     result, response_data = mail.uid('search', None, status)
     uids = response_data[0]
