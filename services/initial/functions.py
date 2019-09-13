@@ -3,7 +3,8 @@ from telegram import ReplyKeyboardMarkup, KeyboardButton
 from services.logger import logger
 
 
-def menu(bot, update):
+def menu(update, context):
+    bot = context.bot
     logger.info("Menu command")
     keyboard = [
         [KeyboardButton("Sport complex attendance")],
@@ -16,7 +17,8 @@ def menu(bot, update):
     bot.send_message(update.message.chat_id, "Select an option", reply_markup=reply_markup)
 
 
-def start(bot, update):
+def start(update, context):
+    bot = context.bot
     logger.info("Start command")
     keyboard = [
         [KeyboardButton("Menu")]
@@ -27,7 +29,8 @@ def start(bot, update):
     bot.send_message(update.message.chat_id, "Hello!", reply_markup=reply_markup)
 
 
-def settings(bot, update):
+def settings(update, context):
+    bot = context.bot
     logger.info("Settings command")
 
     keyboard = [

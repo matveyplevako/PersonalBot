@@ -1,17 +1,17 @@
 from services.email.functions import *
-from telegram.ext import RegexHandler, MessageHandler, Filters, CommandHandler, CallbackQueryHandler
+from telegram.ext import MessageHandler, Filters, CommandHandler, CallbackQueryHandler
 
 
 def setup(updater):
     dispatcher = updater.dispatcher
 
     for user_data in email_utils.get_users_data():
-        updater.job_queue.run_repeating(periodic_pulling_mail, 5, context={"chat_id": user_data[0]})
+        updater.job_queue.run_repeating(periodic_pulling_mail, 10, context={"chat_id": user_data[0]})
 
-    dispatcher.add_handler(RegexHandler("Configure email receiver", start_email_configure))
+    dispatcher.add_handler(MessageHandler(Filters.regex("Configure email receiver"), start_email_configure))
 
     adding_new_email_receiver = ConversationHandler(
-        entry_points=[RegexHandler("Input new user data", add_new_user)],
+        entry_points=[MessageHandler(Filters.regex("Input new user data"), add_new_user)],
         states={
             ADD_NAME: [MessageHandler(Filters.text, add_user_email, pass_chat_data=True)],
             ADD_PASS: [
@@ -21,7 +21,7 @@ def setup(updater):
     )
 
     deleting_email_receiver = ConversationHandler(
-        entry_points=[RegexHandler("Remove email receiver", delete_user_email_select)],
+        entry_points=[MessageHandler(Filters.regex("Remove email receiver"), delete_user_email_select)],
         states={
             DELETE_EMAIL: [MessageHandler(Filters.text, delete_user_email_delete)],
         },

@@ -8,7 +8,7 @@ from services.logger import logger
 
 def main():
     TOKEN = os.environ['BOT_TOKEN']
-    updater = Updater(token=TOKEN)
+    updater = Updater(token=TOKEN, use_context=True)
 
     setup_initial(updater)
     setup_email(updater)
