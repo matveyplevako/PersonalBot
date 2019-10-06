@@ -3,6 +3,7 @@ from telegram import ReplyKeyboardMarkup, KeyboardButton, ParseMode
 from services.logger import logger
 from services.email import email_utils
 from services.initial.functions import settings
+from telegram.ext import run_async
 import traceback
 
 ADD_NAME, ADD_PASS, FINISH_ADDING, DELETE_EMAIL = range(4)
@@ -51,6 +52,7 @@ def delete_user_email_delete(update, context):
     return ConversationHandler.END
 
 
+@run_async
 def periodic_pulling_mail(context):
     bot = context.bot
     job = context.job
