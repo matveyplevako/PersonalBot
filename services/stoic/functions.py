@@ -195,7 +195,7 @@ def delete_job(update, context):
     job_queue = context.job_queue
     job = job_queue.get_jobs_by_name(str(update.message.chat_id))
     if len(job) != 0:
-        job[0].stop()
+        job[0].schedule_removal()
 
 
 def create_job(update, context, hour):
