@@ -1,4 +1,3 @@
-from telegram.ext import ConversationHandler
 from telegram import ReplyKeyboardMarkup, KeyboardButton
 from services.logger import logger
 
@@ -7,6 +6,7 @@ def menu(update, context):
     bot = context.bot
     logger.info("Menu command")
     keyboard = [
+        [KeyboardButton("Daily stoic quote menu")],
         [KeyboardButton("Sport complex attendance")],
         [KeyboardButton("Settings")]
     ]
