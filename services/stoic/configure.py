@@ -6,7 +6,10 @@ def setup(updater):
     dispatcher = updater.dispatcher
 
     for user_data in get_stoic_db().get_all_rows():
-        time = datetime.time(hour=(int(user_data[2]) + 3) % 24)
+        if int(user_data[2]) > 2:
+            time = datetime.time(hour=(int(user_data[2]) - 3))
+        else:
+            time = datetime.time(hour=(24 - int(user_data[2])) % 24)
         updater.job_queue.run_daily(daily_job, time, context={"chat_id": user_data[0]}, name=user_data[0])
 
     dispatcher.add_handler(MessageHandler(Filters.regex("Daily stoic quote menu"), stoic_menu))
@@ -48,14 +51,3 @@ def setup(updater):
     dispatcher.add_handler(set_receiving_hour_conversation)
     dispatcher.add_handler(set_day_conversation)
     dispatcher.add_handler(CallbackQueryHandler(get_content, pattern="^(ru|eng|img)"))
-
-
-'''
-
-from_day when_selected
-
-show day = now - when_selected + from_day
-
-2013-06-01
-
-'''

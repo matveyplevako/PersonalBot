@@ -142,7 +142,7 @@ def set_receiving_hour(update, context):
     start_day = "0"
     when_added = datetime.datetime.now().strftime('%Y-%m-%d')
 
-    if len(res) != 0 and res[0][2] != hour:
+    if len(res) != 0:
         stoic_info.delete_item(user_id=update.message.chat_id)
         start_day = res[0][1]
         when_added = res[0][3]
@@ -176,7 +176,7 @@ def set_day(update, context):
     res = stoic_info.get_items(user_id=update.message.chat_id)
     hour = 12
     when_added = datetime.datetime.now().strftime('%Y-%m-%d')
-    if len(res) != 0 and res[0][1] != day:
+    if len(res) != 0:
         stoic_info.delete_item(user_id=update.message.chat_id)
         hour = res[0][2]
         when_added = res[0][3]
@@ -200,7 +200,10 @@ def delete_job(update, context):
 
 def create_job(update, context, hour):
     chat_id = str(update.message.chat_id)
-    time = datetime.time(hour=(int(hour) + 3) % 24)
+    if int(hour) > 2:
+        time = datetime.time(hour=(int(hour) - 3))
+    else:
+        time = datetime.time(hour=(24 - int(hour)) % 24)
     context.job_queue.run_daily(daily_job, time, context={"chat_id": chat_id}, name=chat_id)
 
 
