@@ -203,7 +203,7 @@ def create_job(update, context, hour):
     if int(hour) > 2:
         time = datetime.time(hour=(int(hour) - 3))
     else:
-        time = datetime.time(hour=(24 - int(hour)) % 24)
+        time = datetime.time(hour=(21 + int(hour)) % 24)
     context.job_queue.run_daily(daily_job, time, context={"chat_id": chat_id}, name=chat_id)
 
 
