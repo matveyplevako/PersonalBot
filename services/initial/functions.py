@@ -7,7 +7,7 @@ def menu(update, context):
     bot = context.bot
     logger.info("Menu command")
     keyboard = [
-        [KeyboardButton("Daily stoic quote")],
+        [KeyboardButton("Daily stoic quote menu")],
         [KeyboardButton("Sport complex attendance")],
         [KeyboardButton("Settings")]
     ]
