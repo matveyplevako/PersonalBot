@@ -1,4 +1,3 @@
-from telegram.ext import ConversationHandler
 from telegram import ReplyKeyboardMarkup, KeyboardButton
 from services.logger import logger
 

@@ -1,6 +1,5 @@
 from telegram import ReplyKeyboardMarkup, KeyboardButton, InlineKeyboardButton, InlineKeyboardMarkup, ParseMode
 from telegram.ext import ConversationHandler
-from services.initial.functions import menu
 from services.DataBase import DB
 import datetime
 import json
@@ -149,6 +148,7 @@ def set_receiving_hour(update, context):
         when_added = res[0][3]
         res = []
     if len(res) == 0:
+        create_job(update, context, hour)
         stoic_info.add_item(user_id=update.message.chat_id, start_day=start_day, hour=hour, when_added=when_added)
 
     day = int(start_day) + delta(*list(map(int, when_added.split("-"))))
@@ -163,6 +163,7 @@ def set_day(update, context):
     try:
         day = int(update.message.text)
         assert 0 <= day <= 365
+        day = str(day)
     except:
         bot.send_message(update.message.chat_id, "select day in range [0, 365]")
         stoic_menu(update, context)
@@ -180,7 +181,9 @@ def set_day(update, context):
         hour = res[0][2]
         when_added = res[0][3]
         res = []
+        delete_job(update, context)
     if len(res) == 0:
+        create_job(update, context, hour)
         stoic_info.add_item(user_id=update.message.chat_id, start_day=day, hour=hour, when_added=when_added)
 
     bot.send_message(update.message.chat_id, "Day updated")
@@ -188,8 +191,22 @@ def set_day(update, context):
     return ConversationHandler.END
 
 
+def delete_job(update, context):
+    job_queue = context.job_queue
+    job = job_queue.get_jobs_by_name(str(update.message.chat_id))
+    if len(job) != 0:
+        job[0].stop()
+
+
+def create_job(update, context, hour):
+    chat_id = str(update.message.chat_id)
+    time = datetime.time(hour=(int(hour) + 3) % 24)
+    context.job_queue.run_daily(daily_job, time, context={"chat_id": chat_id}, name=chat_id)
+
+
 def stop_receiving_quotes(update, context):
     bot = context.bot
+    delete_job(update, context)
     bot.send_message(update.message.chat_id, "subscription stopped")
     stoic_menu(update, context)
 
@@ -207,6 +224,31 @@ def delta(year, month, day):
     now = datetime.datetime.now()
     start_of_the_year = datetime.datetime(year=year, month=month, day=day)
     return (now - start_of_the_year).days
+
+
+def daily_job(context):
+    bot = context.bot
+    job = context.job
+    chat_id = str(job.context['chat_id'])
+    stoic_db = get_stoic_db()
+    res = stoic_db.get_items(user_id=chat_id)
+    if len(res) == 0:
+        return
+
+    start_day = res[0][1]
+    when_added = res[0][3]
+    day = int(start_day) + delta(*list(map(int, when_added.split("-"))))
+
+    keyboard = [
+        [InlineKeyboardButton("🇬🇧 original", callback_data=f'eng {day}')]
+    ]
+    if int(day) <= 230:
+        keyboard[0].insert(0, InlineKeyboardButton("🇷🇺 translate", callback_data=f'ru {day}'))
+    reply_markup = InlineKeyboardMarkup(keyboard)
+    with open("services/stoic/data/img.json") as images:
+        image = json.load(images)[str(day)]
+    bot.send_message(chat_id, f"[​​​​​​​​​​​]({image})Daily quote❕\nDay {int(day)}.", reply_markup=reply_markup,
+                     parse_mode=ParseMode.MARKDOWN)
 
 
 def cancel(update, context):
