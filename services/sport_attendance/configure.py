@@ -1,4 +1,4 @@
-from telegram.ext import RegexHandler, MessageHandler, Filters, CommandHandler
+from telegram.ext import MessageHandler, Filters, CommandHandler
 from services.sport_attendance.functions import *
 
 

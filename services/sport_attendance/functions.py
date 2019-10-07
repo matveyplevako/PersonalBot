@@ -1,9 +1,9 @@
 from services.logger import logger
 from services.sport_attendance import attendance_utils
 from telegram.ext import ConversationHandler
-from telegram import ReplyKeyboardMarkup, KeyboardButton, ParseMode, InlineKeyboardButton, InlineKeyboardMarkup
+from telegram import ReplyKeyboardMarkup, KeyboardButton
 from services.initial.functions import menu
-from datetime import datetime, timedelta
+from datetime import datetime
 
 ADD_START, ADD_FINISH, GET_FOR_PERIOD = range(3)
 
