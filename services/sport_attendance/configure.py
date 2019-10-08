@@ -15,7 +15,7 @@ def setup(updater):
         states={
             GET_FOR_PERIOD: [MessageHandler(Filters.text, get_attendance_for_period)]
         },
-        fallbacks=[CommandHandler("cancel", cancel)]
+        fallbacks=[MessageHandler(Filters.all, cancel)]
     )
 
     adding_new_attendance_record = ConversationHandler(
@@ -24,7 +24,7 @@ def setup(updater):
             ADD_START: [MessageHandler(Filters.text, add_start_time, pass_chat_data=True)],
             ADD_FINISH: [MessageHandler(Filters.text, add_finish_time, pass_chat_data=True)],
         },
-        fallbacks=[CommandHandler("cancel", cancel)]
+        fallbacks=[MessageHandler(Filters.all, cancel)]
     )
 
     dispatcher.add_handler(getting_attendance_for_period)

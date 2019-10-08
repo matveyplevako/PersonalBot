@@ -53,7 +53,7 @@ def get_quote_for_today(update, context):
     if len(res) != 0:
         start_day = res[0][1]
         when_added = res[0][3]
-        day = int(start_day) + delta(*list(map(int, when_added.split("-"))))
+        day = (int(start_day) + delta(*list(map(int, when_added.split("-"))))) % 366
 
     get_quote_selected_day(update, context, day)
 
@@ -152,7 +152,7 @@ def set_receiving_hour(update, context):
         create_job(update, context, hour)
         stoic_info.add_item(user_id=update.message.chat_id, start_day=start_day, hour=hour, when_added=when_added)
 
-    day = int(start_day) + delta(*list(map(int, when_added.split("-"))))
+    day = (int(start_day) + delta(*list(map(int, when_added.split("-"))))) % 366
     bot.send_message(update.message.chat_id, f"You will now receive new quotes from {day} day at {hour}:00")
 
     return ConversationHandler.END
@@ -187,7 +187,7 @@ def set_day(update, context):
         create_job(update, context, hour)
         stoic_info.add_item(user_id=update.message.chat_id, start_day=day, hour=hour, when_added=when_added)
 
-    bot.send_message(update.message.chat_id, "Day updated")
+    bot.send_message(update.message.chat_id, f"You will now receive new quotes from {day} day at {hour}:00")
 
     return ConversationHandler.END
 
@@ -204,7 +204,7 @@ def create_job(update, context, hour):
     if int(hour) > 2:
         time = datetime.time(hour=(int(hour) - 3))
     else:
-        time = datetime.time(hour=(21 + int(hour)) % 24)
+        time = datetime.time(hour=21 + int(hour))
     context.job_queue.run_daily(daily_job, time, context={"chat_id": chat_id}, name=chat_id)
 
 
@@ -242,7 +242,7 @@ def daily_job(context):
 
     start_day = res[0][1]
     when_added = res[0][3]
-    day = int(start_day) + delta(*list(map(int, when_added.split("-"))))
+    day = (int(start_day) + delta(*list(map(int, when_added.split("-"))))) % 366
 
     keyboard = [
         [InlineKeyboardButton("🇬🇧 original", callback_data=f'eng {day}')]

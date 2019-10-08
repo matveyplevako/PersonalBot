@@ -26,7 +26,16 @@ def select_option(update, context):
 def add_record(update, context):
     bot = context.bot
     logger.info("Start process of adding new record to attendance")
-    bot.send_message(update.message.chat_id, "enter the arrival time in format\noptional[M-D] h:m\nor /cancel")
+
+    keyboard = [
+        [KeyboardButton("Now")]
+    ]
+    reply_markup = ReplyKeyboardMarkup(keyboard,
+                                       one_time_keyboard=True,
+                                       resize_keyboard=True)
+
+    bot.send_message(update.message.chat_id, "enter the arrival time in format\noptional[M-D] h:m\nor /cancel",
+                     reply_markup=reply_markup)
     return ADD_START
 
 
@@ -34,11 +43,21 @@ def add_start_time(update, context):
     bot = context.bot
     chat_data = context.chat_data
     date = update.message.text
+
+    keyboard = [
+        [KeyboardButton("Now")]
+    ]
+    reply_markup = ReplyKeyboardMarkup(keyboard,
+                                       one_time_keyboard=True,
+                                       resize_keyboard=True)
+
     now = datetime.now()
     chat_data['month'] = now.month
     chat_data['day'] = now.day
     try:
-        if len(date.split()) == 2:
+        if date == "Now":
+            date = str(datetime.now().replace(microsecond=0))
+        elif len(date.split()) == 2:
             date = datetime.strptime(date, '%m-%d %H:%M').replace(year=now.year)
             chat_data['month'] = date.month
             chat_data['day'] = date.day
@@ -50,7 +69,7 @@ def add_start_time(update, context):
         return cancel(update, context)
 
     chat_data['start'] = date
-    bot.send_message(update.message.chat_id, "enter the leaving time in format\nh:m")
+    bot.send_message(update.message.chat_id, "enter the leaving time in format\nh:m", reply_markup=reply_markup)
     return ADD_FINISH
 
 
@@ -60,8 +79,11 @@ def add_finish_time(update, context):
     date = update.message.text
     now = datetime.now()
     try:
-        date = str(
-            datetime.strptime(date, '%H:%M').replace(year=now.year, month=chat_data['month'], day=chat_data['day']))
+        if date == "Now":
+            date = str(datetime.now().replace(microsecond=0))
+        else:
+            date = str(
+                datetime.strptime(date, '%H:%M').replace(year=now.year, month=chat_data['month'], day=chat_data['day']))
     except Exception as e:
         logger.error(e)
         bot.send_message(update.message.chat_id, "enter valid date and time and try again")
