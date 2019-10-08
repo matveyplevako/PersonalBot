@@ -146,6 +146,7 @@ def set_receiving_hour(update, context):
         stoic_info.delete_item(user_id=update.message.chat_id)
         start_day = res[0][1]
         when_added = res[0][3]
+        delete_job(update, context)
         res = []
     if len(res) == 0:
         create_job(update, context, hour)
@@ -216,6 +217,7 @@ def stop_receiving_quotes(update, context):
     stoic_info = get_stoic_db()
     res = stoic_info.get_items(user_id=update.message.chat_id)
     if len(res) != 0:
+        delete_job(update, context)
         stoic_info.delete_item(user_id=update.message.chat_id)
 
 
