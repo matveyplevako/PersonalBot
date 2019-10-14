@@ -52,7 +52,6 @@ def delete_user_email_delete(update, context):
     return ConversationHandler.END
 
 
-@run_async
 def periodic_pulling_mail(context):
     bot = context.bot
     job = context.job
