@@ -56,11 +56,10 @@ def add_start_time(update, context):
             date = str(datetime.now().replace(microsecond=0))
         elif len(date.split()) == 2:
             date = datetime.strptime(date, '%m-%d %H:%M').replace(year=now.year)
-            if int(date.hour) > 2:
+            if date.hour >= 21:
                 date += timedelta(days=1)
-                date.replace(hour=date.hour - 3)
-            else:
-                date.replace(hour=21 + date.hour)
+
+            date = date.replace(hour=(date.hour + 3) % 24)
             chat_data['month'] = date.month
             chat_data['day'] = date.day
             date = str(date)
