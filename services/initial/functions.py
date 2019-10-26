@@ -1,10 +1,8 @@
 from telegram import ReplyKeyboardMarkup, KeyboardButton
-from services.logger import logger
 
 
 def menu(update, context):
     bot = context.bot
-    logger.info("Menu command")
     keyboard = [
         [KeyboardButton("Daily stoic quote menu")],
         [KeyboardButton("Sport complex attendance")],
@@ -19,7 +17,6 @@ def menu(update, context):
 
 def start(update, context):
     bot = context.bot
-    logger.info("Start command")
     keyboard = [
         [KeyboardButton("Menu")]
     ]
@@ -31,7 +28,6 @@ def start(update, context):
 
 def settings(update, context):
     bot = context.bot
-    logger.info("Settings command")
 
     keyboard = [
         [KeyboardButton("Configure email receiver")],

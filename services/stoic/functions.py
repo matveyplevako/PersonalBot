@@ -3,8 +3,14 @@ from telegram.ext import ConversationHandler
 from services.DataBase import DB
 import datetime
 import json
+import logging
 
 PROCESS_DATA = 0
+
+LOG_FORMAT = ('%(levelname) -10s %(asctime)s %(name) -30s %(funcName) '
+              '-35s %(lineno) -5d: %(message)s')
+LOGGER = logging.getLogger(__name__)
+logging.basicConfig(level=logging.DEBUG, format=LOG_FORMAT)
 
 
 def stoic_menu(update, context):
@@ -122,15 +128,16 @@ def get_content(update, context):
 
 
 # Add 3 hours to get msk time
-def set_receiving_hour(update, context):
+def set_receiving_time(update, context):
     bot = context.bot
 
     try:
-        hour = int(update.message.text)
+        time = update.message.text
+        hour, minute = map(int, time.split(":"))
         assert 0 <= hour <= 23
-        hour = str(hour)
+        assert 0 <= minute <= 59
     except:
-        bot.send_message(update.message.chat_id, "select day in range [0, 365]")
+        bot.send_message(update.message.chat_id, "select hour and minute in range [0, 23], [0, 59]")
         stoic_menu(update, context)
         return ConversationHandler.END
 
@@ -147,13 +154,12 @@ def set_receiving_hour(update, context):
         start_day = res[0][1]
         when_added = res[0][3]
         delete_job(update, context)
-        res = []
-    if len(res) == 0:
-        create_job(update, context, hour)
-        stoic_info.add_item(user_id=update.message.chat_id, start_day=start_day, hour=hour, when_added=when_added)
+
+    create_job(update, context, time)
+    stoic_info.add_item(user_id=update.message.chat_id, start_day=start_day, time=time, when_added=when_added)
 
     day = (int(start_day) + delta(*list(map(int, when_added.split("-"))))) % 366
-    bot.send_message(update.message.chat_id, f"You will now receive new quotes from {day} day at {hour}:00")
+    bot.send_message(update.message.chat_id, f"You will now receive new quotes from {day} day at {time}")
 
     return ConversationHandler.END
 
@@ -175,37 +181,56 @@ def set_day(update, context):
 
     stoic_info = get_stoic_db()
     res = stoic_info.get_items(user_id=update.message.chat_id)
-    hour = 12
+    time = "12:00"
     when_added = datetime.datetime.now().strftime('%Y-%m-%d')
     if len(res) != 0:
         stoic_info.delete_item(user_id=update.message.chat_id)
-        hour = res[0][2]
-        when_added = res[0][3]
-        res = []
+        time = res[0][2]
         delete_job(update, context)
-    if len(res) == 0:
-        create_job(update, context, hour)
-        stoic_info.add_item(user_id=update.message.chat_id, start_day=day, hour=hour, when_added=when_added)
 
-    bot.send_message(update.message.chat_id, f"You will now receive new quotes from {day} day at {hour}:00")
+    create_job(update, context, time)
+    stoic_info.add_item(user_id=update.message.chat_id, start_day=day, time=time, when_added=when_added)
+
+    day = (int(day) + delta(*list(map(int, when_added.split("-"))))) % 366
+    bot.send_message(update.message.chat_id, f"You will now receive new quotes from {day} day at {time}")
 
     return ConversationHandler.END
 
 
+def log_jobs(job_queue):
+    for job in job_queue:
+        LOGGER.info(f"{job.name, job.interval_seconds, job.removed, job.interval}")
+
+
 def delete_job(update, context):
     job_queue = context.job_queue
-    job = job_queue.get_jobs_by_name(str(update.message.chat_id))
-    if len(job) != 0:
-        job[0].schedule_removal()
-
-
-def create_job(update, context, hour):
     chat_id = str(update.message.chat_id)
+    LOGGER.info("deleting previous job")
+    jobs = job_queue.get_jobs_by_name(chat_id)
+    LOGGER.info("was:")
+    log_jobs(context.job_queue.get_jobs_by_name(chat_id))
+    for job in jobs:
+        if not job.removed:
+            job.schedule_removal()
+    LOGGER.info("now:")
+    log_jobs(context.job_queue.get_jobs_by_name(chat_id))
+
+
+def create_job(update, context, time):
+    job_queue = context.job_queue
+    chat_id = str(update.message.chat_id)
+    LOGGER.info("creating new job")
+    LOGGER.info("was:")
+    log_jobs(job_queue.get_jobs_by_name(chat_id))
+    hour, minute = map(int, time.split(":"))
     if int(hour) > 2:
-        time = datetime.time(hour=(int(hour) - 3))
+        running_time = datetime.time(hour=(int(hour) - 3), minute=minute)
     else:
-        time = datetime.time(hour=21 + int(hour))
-    context.job_queue.run_daily(daily_job, time, context={"chat_id": chat_id}, name=chat_id)
+        running_time = datetime.time(hour=21 + int(hour), minute=minute)
+
+    job_queue.run_daily(daily_job, time=running_time, context={"chat_id": chat_id}, name=chat_id)
+    LOGGER.info("now:")
+    log_jobs(job_queue.get_jobs_by_name(chat_id))
 
 
 def stop_receiving_quotes(update, context):
@@ -222,7 +247,7 @@ def stop_receiving_quotes(update, context):
 
 
 def get_stoic_db():
-    return DB("stoic_info", user_id="TEXT", start_day="TEXT", hour="TEXT", when_added="TEXT")
+    return DB("stoic_info", user_id="TEXT", start_day="TEXT", time="TEXT", when_added="TEXT")
 
 
 def delta(year, month, day):

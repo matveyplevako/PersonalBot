@@ -1,31 +1,28 @@
 from telegram.ext import ConversationHandler
 from telegram import ReplyKeyboardMarkup, KeyboardButton, ParseMode
-from services.logger import logger
 from services.email import email_utils
 from services.initial.functions import settings
 from telegram.ext import run_async
-import traceback
+import threading
+
+lock = threading.Lock()
 
 ADD_NAME, ADD_PASS, FINISH_ADDING, DELETE_EMAIL = range(4)
 
 
 def cancel(update, context):
-    bot = context.bot
-    logger.error("Cancel the process")
     settings(update, context)
     return ConversationHandler.END
 
 
 def add_new_user(update, context):
     bot = context.bot
-    logger.info("Start process of adding user")
     bot.send_message(update.message.chat_id, "enter email\nor /cancel")
     return ADD_NAME
 
 
 def delete_user_email_select(update, context):
     bot = context.bot
-    logger.info("Start process of deleting user")
     keyboard = []
     data = email_utils.get_data_about_user(update.message.chat_id)
 
@@ -45,13 +42,13 @@ def delete_user_email_select(update, context):
 
 def delete_user_email_delete(update, context):
     bot = context.bot
-    logger.info("Handling email to delete")
     email_utils.remove_email_from_user(update.message.chat_id, update.message.text)
     bot.send_message(update.message.chat_id, "deleted")
     settings(update, context)
     return ConversationHandler.END
 
 
+@run_async
 def periodic_pulling_mail(context):
     bot = context.bot
     job = context.job
@@ -62,19 +59,15 @@ def periodic_pulling_mail(context):
         password = data[2]
         last_uid = data[3]
         try:
-            response = email_utils.get_new_email(email, password, last_uid, chat_id)
+            with lock:
+                response = email_utils.get_new_email(email, password, last_uid, chat_id)
         except EOFError:
-            logger.error("EOFError")
             continue
         except Exception as e:
             print(e)
-            logger.error("Error while pulling new email")
-            logger.error(traceback.print_exc())
-            logger.error(email)
             continue
         if response:
             sender, subject, image = response
-            logger.info(f"New email to {email} from {sender}")
             sender = sender.replace("_", "\_")
             subject = subject.replace("_", "\_")
             subject = subject.replace("*", "\*")
@@ -89,7 +82,6 @@ def periodic_pulling_mail(context):
 
 def start_email_configure(update, context):
     bot = context.bot
-    logger.info("Configure email receiver command")
     keyboard = [
         [KeyboardButton("Input new user data")],
         [KeyboardButton("Remove email receiver")],
@@ -105,14 +97,12 @@ def start_email_configure(update, context):
 def add_user_email(update, context):
     bot = context.bot
     chat_data = context.chat_data
-    logger.info("Configure new email: handling email")
     chat_data['email'] = update.message.text
     domain = chat_data['email'].split("@")[-1]
     email_data = email_utils.get_domain_data(domain)
     if not email_data:
         bot.send_message(update.message.chat_id,
                          "sorry, this domain is not currently supporting, write to @matveyplevako")
-        logger.error("Unknown domain")
         return cancel(update, context)
     chat_data['imap'] = email_data[0][1]
     bot.send_message(update.message.chat_id, "enter password")
@@ -123,14 +113,11 @@ def add_user_password(update, context):
     bot = context.bot
     chat_data = context.chat_data
     job_queue = context.job_queue
-    logger.info("Configure new email: handling password")
     password = update.message.text
     if not email_utils.add_new_email(update.message.chat_id, chat_data['email'], password, chat_data['imap']):
         bot.send_message(update.message.chat_id, "Password does not match or server does not respond")
-        logger.error("Password does not match or server does not respond")
         return cancel(update, context)
     else:
-        logger.info("Successful configured new email receiver")
         bot.send_message(update.message.chat_id, "Now you will receive notifications when new email will be received")
         job_queue.run_repeating(periodic_pulling_mail, 10, context={"chat_id": update.message.chat_id})
 
