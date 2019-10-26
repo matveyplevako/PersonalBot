@@ -2,7 +2,7 @@ from services.sport_attendance import attendance_utils
 from telegram.ext import ConversationHandler
 from telegram import ReplyKeyboardMarkup, KeyboardButton
 from services.initial.functions import menu
-from datetime import datetime
+from datetime import datetime, timedelta
 
 ADD_START, ADD_FINISH, GET_FOR_PERIOD = range(3)
 
@@ -56,6 +56,11 @@ def add_start_time(update, context):
             date = str(datetime.now().replace(microsecond=0))
         elif len(date.split()) == 2:
             date = datetime.strptime(date, '%m-%d %H:%M').replace(year=now.year)
+            if int(date.hour) > 2:
+                date += timedelta(days=1)
+                date.replace(hour=date.hour - 3)
+            else:
+                date.replace(hour=21 + date.hour)
             chat_data['month'] = date.month
             chat_data['day'] = date.day
             date = str(date)
@@ -108,7 +113,7 @@ def get_attendance_for_period(update, context):
         else:
             start = str(datetime.strptime(start, '%m-%d').replace(year=now.year))
             finish = str(datetime.strptime(finish, '%m-%d').replace(year=now.year))
-    except Exception as e:
+    except:
         bot.send_message(update.message.chat_id, "enter valid date and time and try again")
         return cancel(update, context)
 
