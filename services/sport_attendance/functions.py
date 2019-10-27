@@ -57,7 +57,7 @@ def add_start_time(update, context):
             if date.hour >= 21:
                 date += timedelta(days=1)
 
-            date.replace(hour=(date.hour + 3) % 24, microsecond=0)
+            date = date.replace(hour=(date.hour + 3) % 24, microsecond=0)
             date = str(date.replace(microsecond=0))
 
         elif len(date.split()) == 2:
@@ -87,7 +87,7 @@ def add_finish_time(update, context):
             if date.hour >= 21:
                 date += timedelta(days=1)
 
-            date.replace(hour=(date.hour + 3) % 24, microsecond=0)
+            date = date.replace(hour=(date.hour + 3) % 24, microsecond=0)
             date = str(date)
 
         else:
