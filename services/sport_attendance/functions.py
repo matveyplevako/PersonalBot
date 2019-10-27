@@ -53,13 +53,15 @@ def add_start_time(update, context):
     chat_data['day'] = now.day
     try:
         if date == "Now":
-            date = str(datetime.now().replace(microsecond=0))
-        elif len(date.split()) == 2:
-            date = datetime.strptime(date, '%m-%d %H:%M').replace(year=now.year)
+            date = now
             if date.hour >= 21:
                 date += timedelta(days=1)
 
-            date = date.replace(hour=(date.hour + 3) % 24)
+            date.replace(hour=(date.hour + 3) % 24, microsecond=0)
+            date = str(date.replace(microsecond=0))
+
+        elif len(date.split()) == 2:
+            date = datetime.strptime(date, '%m-%d %H:%M').replace(year=now.year)
             chat_data['month'] = date.month
             chat_data['day'] = date.day
             date = str(date)
@@ -81,7 +83,13 @@ def add_finish_time(update, context):
     now = datetime.now()
     try:
         if date == "Now":
-            date = str(datetime.now().replace(microsecond=0))
+            date = now
+            if date.hour >= 21:
+                date += timedelta(days=1)
+
+            date.replace(hour=(date.hour + 3) % 24, microsecond=0)
+            date = str(date)
+
         else:
             date = str(
                 datetime.strptime(date, '%H:%M').replace(year=now.year, month=chat_data['month'], day=chat_data['day']))
