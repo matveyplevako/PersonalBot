@@ -13,6 +13,7 @@ logging.basicConfig(level=logging.DEBUG, format=LOG_FORMAT)
 
 def main():
     TOKEN = os.environ['BOT_TOKEN']
+    PORT = int(os.environ.get('PORT', '8443'))
     updater = Updater(token=TOKEN, use_context=True)
 
     setup_initial(updater)
@@ -20,7 +21,12 @@ def main():
     setup_sport_attendance(updater)
     setup_stoic(updater)
 
-    updater.start_polling(poll_interval=1)
+    updater.start_webhook(listen="0.0.0.0",
+                          port=PORT,
+                          url_path=TOKEN)
+    updater.bot.set_webhook("https://dry-savannah-69984.herokuapp.com/" + TOKEN)
+
+    updater.idle()
 
 
 if __name__ == '__main__':
