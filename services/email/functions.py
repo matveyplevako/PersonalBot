@@ -119,7 +119,7 @@ def add_user_password(update, context):
         return cancel(update, context)
     else:
         bot.send_message(update.message.chat_id, "Now you will receive notifications when new email will be received")
-        job_queue.run_repeating(periodic_pulling_mail, 10, context={"chat_id": update.message.chat_id})
+        job_queue.run_repeating(periodic_pulling_mail, 60, context={"chat_id": update.message.chat_id})
 
     settings(update, context)
     return ConversationHandler.END
