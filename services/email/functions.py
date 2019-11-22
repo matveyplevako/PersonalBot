@@ -58,14 +58,15 @@ def periodic_pulling_mail(context):
         email = data[1]
         password = data[2]
         last_uid = data[3]
-        try:
-            with lock:
+        with lock:
+            try:
                 response = email_utils.get_new_email(email, password, last_uid, chat_id)
-        except EOFError:
-            continue
-        except Exception as e:
-            print(e)
-            continue
+            except EOFError:
+                continue
+            except Exception as e:
+                print(e)
+                continue
+
         if response:
             sender, subject, image = response
             sender = sender.replace("_", "\_")
