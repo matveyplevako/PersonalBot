@@ -79,6 +79,11 @@ def get_new_email(email, password, last_uid, chat_id):
                         content = part.get_payload(decode=True)
                         charset = part.get_charsets()[0]
                         break
+
+                    if ctype == 'text/plain' and 'attachment' not in cdispo:
+                        content = part.get_payload(decode=True)
+                        charset = part.get_charsets()[0]
+                        break
             else:
                 content = email_message.get_payload(decode=True)
                 charset = email_message.get_charsets()[0]
