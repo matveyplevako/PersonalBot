@@ -8,3 +8,5 @@ def setup(updater):
     dispatcher.add_handler(CommandHandler("start", start))
     dispatcher.add_handler(MessageHandler(Filters.regex("Menu|Back to menu"), menu))
     dispatcher.add_handler(MessageHandler(Filters.regex("Settings|Back to settings"), settings))
+
+    dispatcher.add_error_handler(error_callback)
