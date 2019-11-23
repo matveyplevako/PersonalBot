@@ -2,6 +2,7 @@ from telegram import ReplyKeyboardMarkup, KeyboardButton, ParseMode
 import traceback
 import sys
 from telegram.utils.helpers import mention_html
+import os
 
 
 def menu(update, context):
@@ -19,7 +20,7 @@ def menu(update, context):
 
 
 def error_callback(update, context):
-    devs = [290780010]
+    devs = [os.environ["DEV_CHANNEL"]]
     trace = "".join(traceback.format_tb(sys.exc_info()[2]))
     payload = ""
     if update.effective_user:
