@@ -17,7 +17,8 @@ def setup(updater):
             ADD_PASS: [
                 MessageHandler(Filters.text, add_user_password, pass_chat_data=True, pass_job_queue=True)],
         },
-        fallbacks=[MessageHandler(Filters.all, cancel)]
+        fallbacks=[MessageHandler(Filters.all, cancel)],
+        persistent=True, name='adding_new_email_receiver'
     )
 
     deleting_email_receiver = ConversationHandler(
@@ -25,7 +26,8 @@ def setup(updater):
         states={
             DELETE_EMAIL: [MessageHandler(Filters.text, delete_user_email_delete)],
         },
-        fallbacks=[MessageHandler(Filters.all, cancel)]
+        fallbacks=[MessageHandler(Filters.all, cancel)],
+        persistent=True, name='deleting_email_receiver'
     )
 
     dispatcher.add_handler(deleting_email_receiver)

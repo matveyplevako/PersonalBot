@@ -1,3 +1,4 @@
+redis
 imgurpython
 sqlalchemy
 python-telegram-bot==12.2.0
