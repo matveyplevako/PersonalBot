@@ -115,6 +115,7 @@ def add_user_password(update, context):
     chat_data = context.chat_data
     job_queue = context.job_queue
     password = update.message.text
+    bot.delete_message(update.message.chat_id, update.message.message_id)
     if not email_utils.add_new_email(update.message.chat_id, chat_data['email'], password, chat_data['imap']):
         bot.send_message(update.message.chat_id, "Password does not match or server does not respond")
         return cancel(update, context)
