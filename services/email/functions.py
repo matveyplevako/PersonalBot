@@ -49,10 +49,7 @@ def delete_user_email_delete(update, context):
 
 
 @run_async
-def periodic_pulling_mail(context):
-    bot = context.bot
-    job = context.job
-    chat_id = str(job.context['chat_id'])
+def single_user_mail(bot, chat_id):
     user_data = email_utils.get_data_about_user(chat_id)
     for data in user_data:
         email = data[1]
@@ -79,6 +76,11 @@ def periodic_pulling_mail(context):
                 message = f"[​​​​​​​​​​​]({image}) `New email`\n*To*: {email}\n*Sender*: {sender}\n*Subject*: {subject[:100]}\n"
 
             bot.send_message(chat_id, message, parse_mode=ParseMode.MARKDOWN)
+
+
+def periodic_pulling_mail(context):
+    for user_data in email_utils.get_users_data():
+        single_user_mail(context.bot, user_data[0])
 
 
 def start_email_configure(update, context):
