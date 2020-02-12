@@ -8,9 +8,12 @@ import os
 import re
 import pickle
 import traceback
+import threading
 
 user_data = DB("USER_DATA", user_id="TEXT", email="TEXT", password="TEXT", last_uid="TEXT")
 mail_services = DB("MAIL_SERVICES", email="TEXT", imap="TEXT", web_mail="TEXT")
+
+lock = threading.Lock()
 
 
 def remove_email_from_user(user_id, email):
@@ -28,7 +31,9 @@ def get_mail_object(email, password, imap, status="UNSEEN"):
     except:
         raise EOFError
     mail.select("inbox")
-    result, response_data = mail.uid('search', None, status)
+
+    with lock:
+        result, response_data = mail.uid('search', None, status)
     uids = response_data[0]
 
     # no unseen messages

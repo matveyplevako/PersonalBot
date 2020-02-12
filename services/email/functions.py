@@ -3,9 +3,6 @@ from telegram import ReplyKeyboardMarkup, KeyboardButton, ParseMode
 from services.email import email_utils
 from services.initial.functions import settings
 from telegram.ext import run_async
-import threading
-
-lock = threading.Lock()
 
 ADD_NAME, ADD_PASS, FINISH_ADDING, DELETE_EMAIL = range(4)
 
@@ -55,14 +52,13 @@ def single_user_mail(bot, chat_id):
         email = data[1]
         password = data[2]
         last_uid = data[3]
-        with lock:
-            try:
-                response = email_utils.get_new_email(email, password, last_uid, chat_id)
-            except EOFError:
-                continue
-            except Exception as e:
-                print(e)
-                continue
+        try:
+            response = email_utils.get_new_email(email, password, last_uid, chat_id)
+        except EOFError:
+            continue
+        except Exception as e:
+            print(e)
+            continue
 
         if response:
             sender, subject, image = response
