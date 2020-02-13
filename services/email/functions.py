@@ -3,8 +3,13 @@ from telegram import ReplyKeyboardMarkup, KeyboardButton, ParseMode
 from services.email import email_utils
 from services.initial.functions import settings
 from telegram.ext import run_async
+import logging
 
 ADD_NAME, ADD_PASS, FINISH_ADDING, DELETE_EMAIL = range(4)
+
+LOG_FORMAT = ('%(levelname) -10s %(asctime)s %(name) -30s %(funcName) '
+              '-35s %(lineno) -5d: %(message)s')
+logging.basicConfig(level=logging.DEBUG, format=LOG_FORMAT)
 
 
 def cancel(update, context):
@@ -57,7 +62,7 @@ def single_user_mail(bot, chat_id):
         except EOFError:
             continue
         except Exception as e:
-            print(e)
+            logging.error(e)
             continue
 
         if response:

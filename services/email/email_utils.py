@@ -9,6 +9,12 @@ import re
 import pickle
 import traceback
 import threading
+from multiprocessing import Process, Queue
+import logging
+
+LOG_FORMAT = ('%(levelname) -10s %(asctime)s %(name) -30s %(funcName) '
+              '-35s %(lineno) -5d: %(message)s')
+logging.basicConfig(level=logging.DEBUG, format=LOG_FORMAT)
 
 user_data = DB("USER_DATA", user_id="TEXT", email="TEXT", password="TEXT", last_uid="TEXT")
 mail_services = DB("MAIL_SERVICES", email="TEXT", imap="TEXT", web_mail="TEXT")
@@ -119,11 +125,7 @@ def get_new_email(email, password, last_uid, chat_id):
                 subject = subject.decode(charset)
             except:
                 subject = ""
-        mail.logout()
         return sender, subject, link
-    else:
-        mail.logout()
-        pass
 
 
 def save_as_html(source):

@@ -5,7 +5,7 @@ from telegram.ext import MessageHandler, Filters, CommandHandler, CallbackQueryH
 def setup(updater):
     dispatcher = updater.dispatcher
 
-    updater.job_queue.run_repeating(periodic_pulling_mail, 20)
+    updater.job_queue.run_repeating(periodic_pulling_mail, 60)
 
     dispatcher.add_handler(MessageHandler(Filters.regex("Configure email receiver"), start_email_configure))
 
