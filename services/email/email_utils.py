@@ -8,8 +8,6 @@ import os
 import re
 import pickle
 import traceback
-import threading
-from multiprocessing import Process, Queue
 import logging
 
 LOG_FORMAT = ('%(levelname) -10s %(asctime)s %(name) -30s %(funcName) '
@@ -19,7 +17,6 @@ logging.basicConfig(level=logging.DEBUG, format=LOG_FORMAT)
 user_data = DB("USER_DATA", user_id="TEXT", email="TEXT", password="TEXT", last_uid="TEXT")
 mail_services = DB("MAIL_SERVICES", email="TEXT", imap="TEXT", web_mail="TEXT")
 
-lock = threading.Lock()
 
 
 def remove_email_from_user(user_id, email):
@@ -38,8 +35,7 @@ def get_mail_object(email, password, imap, status="UNSEEN"):
         raise EOFError
     mail.select("inbox")
 
-    with lock:
-        result, response_data = mail.uid('search', None, status)
+    result, response_data = mail.uid('search', None, status)
     uids = response_data[0]
 
     # no unseen messages
