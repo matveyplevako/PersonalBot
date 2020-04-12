@@ -85,7 +85,7 @@ def single_user_mail(bot, chat_id):
 
 def periodic_pulling_mail(context):
     for user_data in email_utils.get_users_data():
-        logging.info(user_data)
+        logging.info(user_data[1])
         single_user_mail(context.bot, user_data[0])
 
 
