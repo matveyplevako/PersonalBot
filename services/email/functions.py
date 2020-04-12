@@ -62,9 +62,7 @@ def single_user_mail(bot, chat_id):
         last_uid = data[3]
         try:
             with lock:
-                logging.debug(f"{email} {last_uid}")
                 response = email_utils.get_new_email(email, password, last_uid, chat_id)
-                logging.debug("new email")
         except EOFError:
             continue
         except Exception as e:

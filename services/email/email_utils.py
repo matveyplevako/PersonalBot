@@ -18,7 +18,6 @@ user_data = DB("USER_DATA", user_id="TEXT", email="TEXT", password="TEXT", last_
 mail_services = DB("MAIL_SERVICES", email="TEXT", imap="TEXT", web_mail="TEXT")
 
 
-
 def remove_email_from_user(user_id, email):
     user_data.delete_item(user_id=user_id, email=email)
 
