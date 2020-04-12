@@ -31,7 +31,8 @@ def get_mail_object(email, password, imap, status="UNSEEN"):
     mail = imaplib.IMAP4_SSL(imap)
     try:
         mail.login(user=email, password=password)
-    except:
+    except Exception as e:
+        logging.error(e)
         raise EOFError
     mail.select("inbox")
 
@@ -55,7 +56,7 @@ def add_new_email(user_id, email, password, imap):
         mail.logout()
         return True
     except Exception as e:
-        print(e)
+        logging.error(e)
         return False
 
 
@@ -110,7 +111,8 @@ def get_new_email(email, password, last_uid, chat_id):
             compressMe(filename)
             link = upload_image_from_file(filename)
             os.remove(filename)
-        except:
+        except Exception as e:
+            logging.error(e)
             with open('mail.pickle', 'wb') as f:
                 pickle.dump(email_message, f)
             traceback.print_exc()
@@ -119,7 +121,8 @@ def get_new_email(email, password, last_uid, chat_id):
         if type(subject) == bytes:
             try:
                 subject = subject.decode(charset)
-            except:
+            except Exception as e:
+                logging.error(e)
                 subject = ""
         return sender, subject, link
 

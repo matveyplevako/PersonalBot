@@ -62,7 +62,9 @@ def single_user_mail(bot, chat_id):
         last_uid = data[3]
         try:
             with lock:
+                logging.debug(f"{email} {last_uid}")
                 response = email_utils.get_new_email(email, password, last_uid, chat_id)
+                logging.debug("new email")
         except EOFError:
             continue
         except Exception as e:
@@ -85,7 +87,6 @@ def single_user_mail(bot, chat_id):
 
 def periodic_pulling_mail(context):
     for user_data in email_utils.get_users_data():
-        logging.info(user_data[1])
         single_user_mail(context.bot, user_data[0])
 
 
