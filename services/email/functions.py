@@ -85,6 +85,7 @@ def single_user_mail(bot, chat_id):
 
 def periodic_pulling_mail(context):
     for user_data in email_utils.get_users_data():
+        logging.info(user_data)
         single_user_mail(context.bot, user_data[0])
 
 
@@ -120,7 +121,6 @@ def add_user_email(update, context):
 def add_user_password(update, context):
     bot = context.bot
     chat_data = context.chat_data
-    job_queue = context.job_queue
     password = update.message.text
     bot.delete_message(update.message.chat_id, update.message.message_id)
     if not email_utils.add_new_email(update.message.chat_id, chat_data['email'], password, chat_data['imap']):
@@ -128,7 +128,6 @@ def add_user_password(update, context):
         return cancel(update, context)
     else:
         bot.send_message(update.message.chat_id, "Now you will receive notifications when new email will be received")
-        job_queue.run_repeating(periodic_pulling_mail, 60, context={"chat_id": update.message.chat_id})
 
     settings(update, context)
     return ConversationHandler.END
