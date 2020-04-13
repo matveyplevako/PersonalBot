@@ -3,6 +3,8 @@ from telegram import ReplyKeyboardMarkup, KeyboardButton, ParseMode
 from services.email import email_utils
 from services.initial.functions import settings
 import logging
+import traceback
+import sys
 
 ADD_NAME, ADD_PASS, FINISH_ADDING, DELETE_EMAIL = range(4)
 
@@ -56,11 +58,11 @@ def single_user_mail(bot, chat_id):
         password = data[2]
         last_uid = data[3]
         try:
+            logging.debug(f"checking {email}")
             response = email_utils.get_new_email(email, password, last_uid, chat_id)
-        except EOFError:
-            continue
         except Exception as e:
             logging.error(e)
+            logging.error(traceback.format_tb(sys.exc_info()[-1]))
             continue
 
         if response:
@@ -80,6 +82,7 @@ def single_user_mail(bot, chat_id):
 def periodic_pulling_mail(context):
     for user_data in email_utils.get_users_data():
         single_user_mail(context.bot, user_data[0])
+        logging.debug(f"error {user_data[1]}")
 
 
 def start_email_configure(update, context):

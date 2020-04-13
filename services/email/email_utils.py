@@ -8,6 +8,7 @@ import os
 import re
 import pickle
 import traceback
+import sys
 import logging
 
 LOG_FORMAT = ('%(levelname) -10s %(asctime)s %(name) -30s %(funcName) '
@@ -32,9 +33,8 @@ def login_into_email_box(email, password, imap):
     mail = imaplib.IMAP4_SSL(imap)
     try:
         mail.login(user=email, password=password)
-    except Exception as e:
-        logging.error(e)
-        raise EOFError
+    except Exception:
+        raise
     mail.select("inbox")
 
     return mail
@@ -58,7 +58,8 @@ def get_mail_object_and_last_unread_uid(email, password, imap, status="UNSEEN"):
         try:
             return mail, get_last_unread_uid(mail, status)
         except Exception as e:
-            print(e)
+            logging.error(e)
+            logging.error(traceback.format_tb(sys.exc_info()[-1]))
             del login_email[email]
 
     mail = login_into_email_box(email, password, imap)
@@ -77,6 +78,7 @@ def add_new_email(user_id, email, password, imap):
         return True
     except Exception as e:
         logging.error(e)
+        logging.error(traceback.format_tb(sys.exc_info()[-1]))
         return False
 
 
@@ -86,6 +88,7 @@ def get_email_message(data):
         return emaillib.message_from_bytes(raw_email)
     except Exception as e:
         logging.error(e)
+        logging.error(traceback.format_tb(sys.exc_info()[-1]))
         raw_email = data[1][1]
         return emaillib.message_from_bytes(raw_email)
 
@@ -142,9 +145,9 @@ def get_new_email(email, password, last_uid, chat_id):
             os.remove(filename)
         except Exception as e:
             logging.error(e)
+            logging.error(traceback.format_tb(sys.exc_info()[-1]))
             with open('mail.pickle', 'wb') as f:
                 pickle.dump(email_message, f)
-            traceback.print_exc()
             link = None
 
         if type(subject) == bytes:
@@ -152,6 +155,7 @@ def get_new_email(email, password, last_uid, chat_id):
                 subject = subject.decode(charset)
             except Exception as e:
                 logging.error(e)
+                logging.error(traceback.format_tb(sys.exc_info()[-1]))
                 subject = ""
         return sender, subject, link
 
