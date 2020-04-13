@@ -80,14 +80,23 @@ def add_new_email(user_id, email, password, imap):
         return False
 
 
+def get_email_message(data):
+    try:
+        raw_email = data[0][1]
+        return emaillib.message_from_bytes(raw_email)
+    except Exception as e:
+        logging.error(e)
+        raw_email = data[1][1]
+        return emaillib.message_from_bytes(raw_email)
+
+
 def get_new_email(email, password, last_uid, chat_id):
     domain = email.split("@")[-1]
     imap, link = mail_services.get_items(email=domain)[0][1:]
     mail, last_unseen_email_uid = get_mail_object_and_last_unread_uid(email, password, imap)
     if int(last_unseen_email_uid) >= int(last_uid):
         result, data = mail.uid('fetch', last_unseen_email_uid, '(RFC822)')
-        raw_email = data[0][1]
-        email_message = emaillib.message_from_bytes(raw_email)
+        email_message = get_email_message(data)
         sender = email_message["From"].split()[-1].replace("<", "").replace(">", "")
         charset = "utf-8"
         if email_message["Subject"] is not None:
