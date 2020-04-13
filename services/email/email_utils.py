@@ -17,6 +17,8 @@ logging.basicConfig(level=logging.DEBUG, format=LOG_FORMAT)
 user_data = DB("USER_DATA", user_id="TEXT", email="TEXT", password="TEXT", last_uid="TEXT")
 mail_services = DB("MAIL_SERVICES", email="TEXT", imap="TEXT", web_mail="TEXT")
 
+login_email = {}  # key - email, value - mail object
+
 
 def remove_email_from_user(user_id, email):
     user_data.delete_item(user_id=user_id, email=email)
@@ -26,7 +28,7 @@ def get_data_about_user(user_id):
     return user_data.get_items(user_id=user_id)
 
 
-def get_mail_object(email, password, imap, status="UNSEEN"):
+def login_into_email_box(email, password, imap):
     mail = imaplib.IMAP4_SSL(imap)
     try:
         mail.login(user=email, password=password)
@@ -35,24 +37,43 @@ def get_mail_object(email, password, imap, status="UNSEEN"):
         raise EOFError
     mail.select("inbox")
 
+    return mail
+
+
+def get_last_unread_uid(mail, status="UNSEEN"):
     result, response_data = mail.uid('search', None, status)
     uids = response_data[0]
 
     # no unseen messages
     if len(uids) == 0:
-        return mail, -1
+        return -1
 
     last_unseen_email_uid = uids.split()[-1]
-    return mail, last_unseen_email_uid
+    return last_unseen_email_uid
+
+
+def get_mail_object_and_last_unread_uid(email, password, imap, status="UNSEEN"):
+    if email in login_email:
+        mail = login_email[email]
+        try:
+            return mail, get_last_unread_uid(mail, status)
+        except Exception as e:
+            print(e)
+            del login_email[email]
+
+    mail = login_into_email_box(email, password, imap)
+    login_email[email] = mail
+    logging.info(f"new login {email}")
+
+    return mail, get_last_unread_uid(mail, status)
 
 
 def add_new_email(user_id, email, password, imap):
     user_id = str(user_id)
     try:
-        mail, last_unseen_email_uid = get_mail_object(email, password, imap, status="ALL")
+        mail, last_unseen_email_uid = get_mail_object_and_last_unread_uid(email, password, imap, status="ALL")
         user_data.add_item(user_id=user_id, email=email, password=password,
                            last_uid=last_unseen_email_uid.decode('utf-8'))
-        mail.logout()
         return True
     except Exception as e:
         logging.error(e)
@@ -62,7 +83,7 @@ def add_new_email(user_id, email, password, imap):
 def get_new_email(email, password, last_uid, chat_id):
     domain = email.split("@")[-1]
     imap, link = mail_services.get_items(email=domain)[0][1:]
-    mail, last_unseen_email_uid = get_mail_object(email, password, imap)
+    mail, last_unseen_email_uid = get_mail_object_and_last_unread_uid(email, password, imap)
     if int(last_unseen_email_uid) >= int(last_uid):
         result, data = mail.uid('fetch', last_unseen_email_uid, '(RFC822)')
         raw_email = data[0][1]
