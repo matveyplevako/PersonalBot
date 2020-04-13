@@ -58,6 +58,7 @@ def get_mail_object_and_last_unread_uid(email, password, imap, status="UNSEEN"):
         try:
             return mail, get_last_unread_uid(mail, status)
         except Exception as e:
+            logging.error(email)
             logging.error(e)
             logging.error(traceback.format_tb(sys.exc_info()[-1]))
             del login_email[email]
@@ -77,6 +78,7 @@ def add_new_email(user_id, email, password, imap):
                            last_uid=last_unseen_email_uid.decode('utf-8'))
         return True
     except Exception as e:
+        logging.error(email)
         logging.error(e)
         logging.error(traceback.format_tb(sys.exc_info()[-1]))
         return False
@@ -144,6 +146,7 @@ def get_new_email(email, password, last_uid, chat_id):
             link = upload_image_from_file(filename)
             os.remove(filename)
         except Exception as e:
+            logging.error(email)
             logging.error(e)
             logging.error(traceback.format_tb(sys.exc_info()[-1]))
             with open('mail.pickle', 'wb') as f:
@@ -154,6 +157,7 @@ def get_new_email(email, password, last_uid, chat_id):
             try:
                 subject = subject.decode(charset)
             except Exception as e:
+                logging.error(email)
                 logging.error(e)
                 logging.error(traceback.format_tb(sys.exc_info()[-1]))
                 subject = ""
