@@ -82,7 +82,6 @@ def single_user_mail(bot, chat_id):
 def periodic_pulling_mail(context):
     for user_data in email_utils.get_users_data():
         single_user_mail(context.bot, user_data[0])
-        logging.debug(f"error {user_data[1]}")
 
 
 def start_email_configure(update, context):
