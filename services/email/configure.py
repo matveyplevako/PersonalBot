@@ -1,11 +1,11 @@
 from services.email.functions import *
-from telegram.ext import MessageHandler, Filters, CommandHandler, CallbackQueryHandler
+from telegram.ext import MessageHandler, Filters
 
 
 def setup(updater):
     dispatcher = updater.dispatcher
 
-    updater.job_queue.run_repeating(periodic_pulling_mail, 60)
+    updater.job_queue.run_repeating(periodic_pulling_mail, 10)
 
     dispatcher.add_handler(MessageHandler(Filters.regex("Configure email receiver"), start_email_configure))
 
