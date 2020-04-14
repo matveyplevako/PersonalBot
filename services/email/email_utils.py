@@ -41,6 +41,7 @@ def login_into_email_box(email, password, imap):
 
 
 def get_last_unread_uid(mail, status="UNSEEN"):
+    mail.noop()
     result, response_data = mail.uid('search', None, status)
     uids = response_data[0]
 

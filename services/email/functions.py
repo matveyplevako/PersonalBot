@@ -58,7 +58,6 @@ def single_user_mail(bot, chat_id):
         password = data[2]
         last_uid = data[3]
         try:
-            logging.debug(f"checking {email}")
             response = email_utils.get_new_email(email, password, last_uid, chat_id)
         except Exception as e:
             logging.error(e)
