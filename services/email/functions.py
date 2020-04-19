@@ -82,6 +82,8 @@ def periodic_pulling_mail(context):
     for user_data in email_utils.get_users_data():
         single_user_mail(context.bot, user_data[0])
 
+    context.job_queue.run_once(periodic_pulling_mail, 5, context={"job_queue": context.job_queue})
+
 
 def start_email_configure(update, context):
     bot = context.bot
