@@ -101,6 +101,7 @@ def get_new_email(email, password, last_uid, chat_id):
     imap, link = mail_services.get_items(email=domain)[0][1:]
     mail, last_unseen_email_uid = get_mail_object_and_last_unread_uid(email, password, imap)
     if int(last_unseen_email_uid) >= int(last_uid):
+        logging.debug(f"fetching email for {email} {last_unseen_email_uid}")
         result, data = mail.uid('fetch', last_unseen_email_uid, '(RFC822)')
         email_message = get_email_message(data)
         sender = email_message["From"].split()[-1].replace("<", "").replace(">", "")
