@@ -81,7 +81,11 @@ def single_user_mail(bot, chat_id):
 @run_async
 def periodic_pulling_mail(context):
     for user_data in email_utils.get_users_data():
-        single_user_mail(context.bot, user_data[0])
+        try:
+            single_user_mail(context.bot, user_data[0])
+        except Exception as e:
+            logging.error(e)
+            logging.error(traceback.format_tb(sys.exc_info()[-1]))
 
     context.job_queue.run_once(periodic_pulling_mail, 5, context={"job_queue": context.job_queue})
 
