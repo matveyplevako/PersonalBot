@@ -3,4 +3,5 @@ imgurpython
 sqlalchemy
 python-telegram-bot==12.2.0
 Pillow
+requests
 psycopg2

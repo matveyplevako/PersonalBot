@@ -106,6 +106,7 @@ def get_new_email(email, password, last_uid, chat_id):
         email_message = get_email_message(data)
         sender = email_message["From"].split()[-1].replace("<", "").replace(">", "")
         charset = "utf-8"
+        html_template_filename = None
         if email_message["Subject"] is not None:
             subject = decode_header(email_message["Subject"])[0][0]
         else:
@@ -147,7 +148,7 @@ def get_new_email(email, password, last_uid, chat_id):
             with open(html_template_filename, "w") as tmp:
                 tmp.write(content)
             os.system(f"{os.environ['WKHTMLTOIMAGE_BIN']} {html_template_filename} {image_filename}")
-            os.remove(html_template_filename)
+            # os.remove(html_template_filename)
             compressMe(image_filename)
             link = upload_image_from_file(image_filename)
             os.remove(image_filename)
@@ -167,7 +168,7 @@ def get_new_email(email, password, last_uid, chat_id):
                 logging.error(e)
                 logging.error(traceback.format_tb(sys.exc_info()[-1]))
                 subject = ""
-        return sender, subject, link
+        return sender, subject, link, html_template_filename
 
 
 def upload_image_from_file(filename):

@@ -4,6 +4,8 @@ from services.DataBase import DB
 import datetime
 import json
 import logging
+import requests
+from os import environ
 
 PROCESS_DATA = 0
 
@@ -81,8 +83,7 @@ def get_quote_selected_day(update, context, day=None):
 
         [InlineKeyboardButton("🇬🇧 original", callback_data=f'eng {day}')]
     ]
-    if int(day) <= 230:
-        keyboard[0].insert(0, InlineKeyboardButton("🇷🇺 translate", callback_data=f'ru {day}'))
+    keyboard[0].insert(0, InlineKeyboardButton("🇷🇺 translate", callback_data=f'ru {day}'))
     reply_markup = InlineKeyboardMarkup(keyboard)
     with open("services/stoic/data/img.json") as images:
         image = json.load(images)[day]
@@ -102,7 +103,7 @@ def get_content(update, context):
          InlineKeyboardButton("🇬🇧 original", callback_data=f'eng {day}'),
          InlineKeyboardButton("📸 screen from book", callback_data=f'img {day}')]
     ]
-    if chosen == "ru" or int(day) > 230:
+    if chosen == "ru":
         keyboard[0].pop(0)
     if chosen == "eng":
         keyboard[0].pop(-2)
@@ -115,8 +116,12 @@ def get_content(update, context):
         with open(f"services/stoic/data/{chosen}.json") as data:
             content = f"[​​​​​​​​​​​]({json.load(data)[day]}) Day {int(day)}."
     else:
-        with open(f"services/stoic/data/{chosen}.json") as data:
-            content = json.load(data)[day]
+        if int(day) > 230 and chosen == "ru":
+            with open(f"services/stoic/data/eng.json") as data:
+                content = translate(json.load(data)[day])
+        else:
+            with open(f"services/stoic/data/{chosen}.json") as data:
+                content = json.load(data)[day]
 
     bot.edit_message_text(
         chat_id=query.message.chat_id,
@@ -272,8 +277,7 @@ def daily_job(context):
     keyboard = [
         [InlineKeyboardButton("🇬🇧 original", callback_data=f'eng {day}')]
     ]
-    if int(day) <= 230:
-        keyboard[0].insert(0, InlineKeyboardButton("🇷🇺 translate", callback_data=f'ru {day}'))
+    keyboard[0].insert(0, InlineKeyboardButton("🇷🇺 translate", callback_data=f'ru {day}'))
     reply_markup = InlineKeyboardMarkup(keyboard)
     with open("services/stoic/data/img.json") as images:
         image = json.load(images)[str(day)]
@@ -284,3 +288,13 @@ def daily_job(context):
 def cancel(update, context):
     stoic_menu(update, context)
     return ConversationHandler.END
+
+
+def translate(my_text):
+    params = {
+        "key": environ["TRANSLATE_KEY"],
+        "text": my_text,
+        "lang": 'en-ru'
+    }
+    response = requests.get("https://translate.yandex.net/api/v1.5/tr.json/translate", params=params)
+    return response.json()['text'][0]

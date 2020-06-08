@@ -5,6 +5,7 @@ from services.initial.functions import settings
 import logging
 import traceback
 import sys
+import os
 
 ADD_NAME, ADD_PASS, FINISH_ADDING, DELETE_EMAIL = range(4)
 
@@ -65,7 +66,7 @@ def single_user_mail(bot, chat_id):
             continue
 
         if response:
-            sender, subject, image = response
+            sender, subject, image, html_template_filename = response
             sender = sender.replace("_", "\_")
             subject = subject.replace("_", "\_")
             subject = subject.replace("*", "\*")
@@ -75,7 +76,13 @@ def single_user_mail(bot, chat_id):
             else:
                 message = f"[​​​​​​​​​​​]({image}) `New email`\n*To*: {email}\n*Sender*: {sender}\n*Subject*: {subject[:100]}\n"
 
-            bot.send_message(chat_id, message, parse_mode=ParseMode.MARKDOWN)
+            message_id = bot.send_message(chat_id, message, parse_mode=ParseMode.MARKDOWN).message_id
+
+            if html_template_filename:
+                with open(html_template_filename, 'rb') as file:
+                    bot.send_document(chat_id, document=file, reply_to_message_id=message_id,
+                                      filename=f"email.html")
+                os.remove(html_template_filename)
 
 
 @run_async
