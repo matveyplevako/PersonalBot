@@ -1,11 +1,14 @@
 from telegram.ext import ConversationHandler, run_async
-from telegram import ReplyKeyboardMarkup, KeyboardButton, ParseMode
+from telegram import ReplyKeyboardMarkup, KeyboardButton, ParseMode, InlineKeyboardButton, InlineKeyboardMarkup, \
+    InputMediaDocument
 from services.email import email_utils
 from services.initial.functions import settings
 import logging
 import traceback
 import sys
 import os
+from pymongo import MongoClient
+from bson.objectid import ObjectId
 
 ADD_NAME, ADD_PASS, FINISH_ADDING, DELETE_EMAIL = range(4)
 
@@ -17,6 +20,13 @@ logging.basicConfig(level=logging.DEBUG, format=LOG_FORMAT)
 def cancel(update, context):
     settings(update, context)
     return ConversationHandler.END
+
+
+def get_mongo():
+    client = MongoClient(os.environ["MONGODB_URI"])
+    db = client.get_database()
+    collection = db.storage
+    return collection
 
 
 def add_new_user(update, context):
@@ -66,23 +76,49 @@ def single_user_mail(bot, chat_id):
             continue
 
         if response:
-            sender, subject, image, html_template_filename = response
+            sender, subject, image, prefix = response
             sender = sender.replace("_", "\_")
             subject = subject.replace("_", "\_")
             subject = subject.replace("*", "\*")
             email = email.replace("_", "\_")
+            html_template_filename = prefix + ".html"
             if image is None:
                 message = f"`New email`\n*To*: {email}\n*Sender*: {sender}\n*Subject*: {subject[:100]}\n"
             else:
                 message = f"[​​​​​​​​​​​]({image}) `New email`\n*To*: {email}\n*Sender*: {sender}\n*Subject*: {subject[:100]}\n"
 
-            message_id = bot.send_message(chat_id, message, parse_mode=ParseMode.MARKDOWN).message_id
-
+            reply_markup = None
             if html_template_filename:
                 with open(html_template_filename, 'rb') as file:
-                    bot.send_document(chat_id, document=file, reply_to_message_id=message_id,
-                                      filename=f"email.html")
+                    document_message = bot.send_document(chat_id, document=file, disable_notification=True,
+                                                         filename=sender + ".html")
+                    bot.delete_message(chat_id, message_id=document_message.message_id)
+                    file_id = document_message.document.file_id
+
+                    collection = get_mongo()
+                    key = collection.insert_one({"file_id": file_id, "subject": subject}).inserted_id
+                    keyboard = [[InlineKeyboardButton("show email", callback_data=f"email:{key}")]]
+
                 os.remove(html_template_filename)
+                reply_markup = InlineKeyboardMarkup(keyboard)
+
+            bot.send_message(chat_id, message, parse_mode=ParseMode.MARKDOWN, reply_markup=reply_markup)
+
+
+def send_doc(update, context):
+    bot = context.bot
+    query = update.callback_query
+    _, key = query.data.split(":")
+    collection = get_mongo()
+    file = collection.find_one({"_id": ObjectId(key)})
+    file_id = file["file_id"]
+    email_subject = file["subject"]
+    if file_id:
+        bot.send_document(
+            chat_id=query.message.chat_id,
+            caption=email_subject,
+            document=file_id,
+        )
 
 
 @run_async
