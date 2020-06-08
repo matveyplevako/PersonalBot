@@ -23,7 +23,7 @@ def cancel(update, context):
 
 
 def get_mongo():
-    client = MongoClient(os.environ["MONGODB_URI"])
+    client = MongoClient(os.environ["MONGODB_URI"], retryWrites=False)
     db = client.get_database()
     collection = db.storage
     return collection
