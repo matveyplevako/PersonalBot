@@ -140,13 +140,17 @@ def get_new_email(email, password, last_uid, chat_id):
             else:
                 content = f'<head><meta http-equiv="Content-Type" content="text/\r\nhtml; charset=utf-8"/>' + content
 
-            filename = f"{chat_id}.png"
-            save_as_html(content)
-            os.system(f"{os.environ['WKHTMLTOIMAGE_BIN']} temp.html {filename}")
-            os.remove("temp.html")
-            compressMe(filename)
-            link = upload_image_from_file(filename)
-            os.remove(filename)
+            _id = int(last_unseen_email_uid)
+            prefix = f"{chat_id}_{_id}"
+            image_filename = f"{prefix}.png"
+            html_template_filename = f"{prefix}.html"
+            with open(html_template_filename, "w") as tmp:
+                tmp.write(content)
+            os.system(f"{os.environ['WKHTMLTOIMAGE_BIN']} {html_template_filename} {image_filename}")
+            os.remove(html_template_filename)
+            compressMe(image_filename)
+            link = upload_image_from_file(image_filename)
+            os.remove(image_filename)
         except Exception as e:
             logging.error(email)
             logging.error(e)
@@ -164,11 +168,6 @@ def get_new_email(email, password, last_uid, chat_id):
                 logging.error(traceback.format_tb(sys.exc_info()[-1]))
                 subject = ""
         return sender, subject, link
-
-
-def save_as_html(source):
-    with open("temp.html", "w") as tmp:
-        tmp.write(source)
 
 
 def upload_image_from_file(filename):
