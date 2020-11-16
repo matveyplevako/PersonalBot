@@ -10,6 +10,7 @@ import pickle
 import traceback
 import sys
 import logging
+import subprocess
 
 LOG_FORMAT = ('%(levelname) -10s %(asctime)s %(name) -30s %(funcName) '
               '-35s %(lineno) -5d: %(message)s')
@@ -147,7 +148,15 @@ def get_new_email(email, password, last_uid, chat_id):
             html_template_filename = f"{prefix}.html"
             with open(html_template_filename, "w") as tmp:
                 tmp.write(content)
-            os.system(f"{os.environ['WKHTMLTOIMAGE_BIN']} {html_template_filename} {image_filename}")
+
+            cmd = f"{os.environ['WKHTMLTOIMAGE_BIN']} {html_template_filename} {image_filename}"
+            p = subprocess.Popen(cmd.split())
+            try:
+                p.wait(30)
+            except subprocess.TimeoutExpired:
+                logging.error("timeout while fetching", mail)
+                p.kill()
+
             # os.remove(html_template_filename)
             compressMe(image_filename)
             link = upload_image_from_file(image_filename)
