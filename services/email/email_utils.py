@@ -153,14 +153,14 @@ def get_new_email(email, password, last_uid, chat_id):
             p = subprocess.Popen(cmd.split())
             try:
                 p.wait(30)
+                compressMe(image_filename)
+                link = upload_image_from_file(image_filename)
+                os.remove(image_filename)
             except subprocess.TimeoutExpired:
                 logging.error("timeout while fetching", mail)
                 p.kill()
 
             # os.remove(html_template_filename)
-            compressMe(image_filename)
-            link = upload_image_from_file(image_filename)
-            os.remove(image_filename)
         except Exception as e:
             logging.error(email)
             logging.error(e)
