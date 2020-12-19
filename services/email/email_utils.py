@@ -157,7 +157,7 @@ def get_new_email(email, password, last_uid, chat_id):
                 link = upload_image_from_file(image_filename)
                 os.remove(image_filename)
             except subprocess.TimeoutExpired:
-                logging.error("timeout while fetching", mail)
+                logging.error("timeout while fetching")
                 p.kill()
 
             # os.remove(html_template_filename)
@@ -165,8 +165,6 @@ def get_new_email(email, password, last_uid, chat_id):
             logging.error(email)
             logging.error(e)
             logging.error(traceback.format_tb(sys.exc_info()[-1]))
-            with open('mail.pickle', 'wb') as f:
-                pickle.dump(email_message, f)
             link = None
 
         if type(subject) == bytes:
